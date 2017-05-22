@@ -62,7 +62,7 @@ class PMMLModel(inputStream: InputStream) extends Model {
   PMMLModel.names.get(name) match {
     case Some(index) => {
      val v = inputs.getFieldByNumber(index + 1)
-      v.asInstanceOf[Float].toDouble
+      v.asInstanceOf[Double]
     }
     case _ => .0
   }
