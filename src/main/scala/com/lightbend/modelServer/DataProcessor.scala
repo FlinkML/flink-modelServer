@@ -56,6 +56,11 @@ class DataProcessor extends RichCoProcessFunction[WineRecord, ModelToServe, Doub
     // See if we have update for the model
     newModel match {
       case Some(model) => {
+        // Clean up current model
+        currentModel match {
+          case Some(m) => m.cleanup()
+          case _ =>
+        }
         // Update model
         currentModel = Some(model)
         modelState.update(newModelState.value())

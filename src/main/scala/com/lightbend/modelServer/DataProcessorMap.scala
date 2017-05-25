@@ -34,8 +34,14 @@ class DataProcessorMap extends RichCoFlatMapFunction[WineRecord, ModelToServe, D
   }
 
   override def flatMap1(record: WineRecord, out: Collector[Double]): Unit = {
+    // See if we need to update
     newModel match {
       case Some(model) => {
+        // close current model first
+        currentModel match {
+          case Some(m) => m.cleanup();
+          case _ =>
+        }
         // Update model
         currentModel = Some(model)
         newModel = None

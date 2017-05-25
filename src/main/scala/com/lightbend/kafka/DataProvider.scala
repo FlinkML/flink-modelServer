@@ -55,17 +55,17 @@ object DataProvider {
     for (line <- bufferedSource.getLines) {
       val cols = line.split(";").map(_.trim)
       val record = new WineRecord(
-        fixedAcidity = cols(0).toFloat,
-        volatileAcidity = cols(1).toFloat,
-        citricAcid = cols(2).toFloat,
-        residualSugar = cols(3).toFloat,
-        chlorides = cols(4).toFloat,
-        freeSulfurDioxide = cols(5).toFloat,
-        totalSulfurDioxide = cols(6).toFloat,
-        density = cols(7).toFloat,
-        pH = cols(8).toFloat,
-        sulphates = cols(9).toFloat,
-        alcohol = cols(10).toFloat,
+        fixedAcidity = cols(0).toDouble,
+        volatileAcidity = cols(1).toDouble,
+        citricAcid = cols(2).toDouble,
+        residualSugar = cols(3).toDouble,
+        chlorides = cols(4).toDouble,
+        freeSulfurDioxide = cols(5).toDouble,
+        totalSulfurDioxide = cols(6).toDouble,
+        density = cols(7).toDouble,
+        pH = cols(8).toDouble,
+        sulphates = cols(9).toDouble,
+        alcohol = cols(10).toDouble,
         dataType = "wine"
       )
       result = record +: result
