@@ -9,22 +9,22 @@ package com.lightbend.modelServer.model
 import org.jpmml.evaluator.{FieldValue, ModelEvaluatorFactory, TargetField}
 import org.jpmml.evaluator.visitors._
 import org.jpmml.model.PMMLUtil
-import java.io.InputStream
+import java.io.{ByteArrayInputStream, InputStream}
 
 import org.jpmml.evaluator.Computable
 import com.lightbend.model.winerecord.WineRecord
-import org.dmg.pmml.{PMML, FieldName}
+import org.dmg.pmml.{FieldName, PMML}
 
 import scala.collection._
 import scala.collection.JavaConversions._
 
 
-class PMMLModel(inputStream: InputStream) extends Model {
+class PMMLModel(inputStream: Array[Byte]) extends Model {
 
   var arguments = mutable.Map[FieldName, FieldValue]()
 
   // Marshall PMML
-  val pmml = PMMLUtil.unmarshal(inputStream)
+  val pmml = PMMLUtil.unmarshal(new ByteArrayInputStream(inputStream))
 
   // Optimize model// Optimize model
   PMMLModel.optimize(pmml)
@@ -70,6 +70,8 @@ class PMMLModel(inputStream: InputStream) extends Model {
 }
 
 object PMMLModel{
+
+  def apply(inputStream: Array[Byte]): PMMLModel = new PMMLModel(inputStream)
   private val optimizers = Array(new ExpressionOptimizer, new FieldOptimizer, new PredicateOptimizer, new GeneralRegressionModelOptimizer, new NaiveBayesModelOptimizer, new RegressionModelOptimizer)
   def optimize(pmml : PMML) = this.synchronized {
     optimizers.foreach(opt =>

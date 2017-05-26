@@ -9,7 +9,7 @@ import org.apache.flink.api.scala.createTypeInformation
 import org.apache.flink.configuration.Configuration
 import org.apache.flink.streaming.api.functions.co.{CoProcessFunction, RichCoProcessFunction}
 import org.apache.flink.util.Collector
-import com.lightbend.modelServer.model.{Model, PMMLModel}
+import com.lightbend.modelServer.model.{Model, PMMLModel, TensorFlowModel}
 
 /**
   * Created by boris on 5/8/17.
@@ -46,7 +46,8 @@ class DataProcessor extends RichCoProcessFunction[WineRecord, ModelToServe, Doub
     println(s"New model - $model")
     newModelState.update(new ModelToServeStats(model))
     newModel = model.modelType match {
-      case ModelDescriptor.ModelType.PMML => Some(new PMMLModel(new ByteArrayInputStream(model.model)))
+      case ModelDescriptor.ModelType.PMML => Some(PMMLModel(model.model))
+      case ModelDescriptor.ModelType.TENSORFLOW => Some(TensorFlowModel(model.model))
       case _ => None // Not supported yet
     }
   }

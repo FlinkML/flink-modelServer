@@ -4,7 +4,7 @@ import java.io.ByteArrayInputStream
 
 import com.lightbend.model.modeldescriptor.ModelDescriptor
 import com.lightbend.model.winerecord.WineRecord
-import com.lightbend.modelServer.model.{Model, PMMLModel}
+import com.lightbend.modelServer.model.{Model, PMMLModel, TensorFlowModel}
 import org.apache.flink.streaming.api.functions.co.RichCoFlatMapFunction
 import org.apache.flink.util.Collector
 
@@ -28,7 +28,8 @@ class DataProcessorMap extends RichCoFlatMapFunction[WineRecord, ModelToServe, D
   override def flatMap2(model: ModelToServe, out: Collector[Double]): Unit = {
     println(s"New model - $model")
     newModel = model.modelType match {
-      case ModelDescriptor.ModelType.PMML => Some(new PMMLModel(new ByteArrayInputStream(model.model)))
+      case ModelDescriptor.ModelType.PMML => Some(new PMMLModel(model.model))
+      case ModelDescriptor.ModelType.TENSORFLOW => Some(TensorFlowModel(model.model))
       case _ => None // Not supported yet
     }
   }

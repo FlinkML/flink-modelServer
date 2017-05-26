@@ -25,17 +25,12 @@ object DataProvider {
     val bos = new ByteArrayOutputStream()
     val records  = getListOfRecords(file)
     while (true) {
-      var lineCounter = 0
       records.foreach(r => {
         bos.reset()
         r.writeTo(bos)
-        lineCounter = lineCounter + 1
-        if(lineCounter % 50 == 0)
-          println(s"Processed $lineCounter record")
         sender.writeValue(ModelServingConfiguration.DATA_TOPIC, bos.toByteArray)
         pause()
       })
-      pause()
     }
   }
 

@@ -1,11 +1,9 @@
 package com.lightbend.modelServer
 
-import java.io.ByteArrayInputStream
 import java.nio.file.{Files, Paths}
 
 import com.lightbend.kafka.DataProvider
-import com.lightbend.model.winerecord.WineRecord
-import com.lightbend.modelServer.model.PMMLModel
+import com.lightbend.modelServer.model.{PMMLModel, TensorFlowModel}
 
 
 /**
@@ -14,15 +12,21 @@ import com.lightbend.modelServer.model.PMMLModel
 object ModelTester {
 
   val datafile = "data/winequality_red.csv"
-  val modelfile = "data/winequalityDecisionTreeClassification.pmml"
+  val modelfilePMML = "data/winequalityDecisionTreeClassification.pmml"
+  val modelfileTensor = "data/optimized_WineQuality.pb"
 
   def main(args: Array[String]) {
-    val byteArray = Files.readAllBytes(Paths.get(modelfile))
     val records = DataProvider.getListOfRecords(datafile)
-    val model = new PMMLModel(new ByteArrayInputStream(byteArray))
+    // PMML
+    val PMMLbyteArray = Files.readAllBytes(Paths.get(modelfilePMML))
+    val TensorflowbyteArray = Files.readAllBytes(Paths.get(modelfileTensor))
+    val PMMLmodel = PMMLModel(PMMLbyteArray)
+    val Tensormodel = TensorFlowModel(TensorflowbyteArray)
+    println("PMML | Tensorflow")
     records.foreach(r => {
-      val result = model.score(r.asInstanceOf[AnyVal]).asInstanceOf[Double]
-      println(result)
+      val presult = PMMLmodel.score(r.asInstanceOf[AnyVal]).asInstanceOf[Double]
+      val tresult = Tensormodel.score(r.asInstanceOf[AnyVal]).asInstanceOf[Double]
+      println(s"$presult  | $tresult")
     })
   }
 }

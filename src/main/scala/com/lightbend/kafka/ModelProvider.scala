@@ -14,6 +14,7 @@ import com.lightbend.model.modeldescriptor.ModelDescriptor
 object ModelProvider {
 
   val directory = "data/"
+  val tensorfile = "data/optimized_WineQuality.pb"
   val timeInterval = 1000 * 60 * 1        // 1 mins
 
   def main(args: Array[String]) {
@@ -23,16 +24,26 @@ object ModelProvider {
     val bos = new ByteArrayOutputStream()
     while (true) {
       files.foreach(f => {
-        val byteArray = Files.readAllBytes(Paths.get(directory + f))
-        val record = ModelDescriptor(name = f.dropRight(5),
+        // PMML
+        val pByteArray = Files.readAllBytes(Paths.get(directory + f))
+        val pRecord = ModelDescriptor(name = f.dropRight(5),
           description = "generated from SparkML", modeltype = ModelDescriptor.ModelType.PMML,
-          dataType = "wine").withData(ByteString.copyFrom(byteArray))
+          dataType = "wine").withData(ByteString.copyFrom(pByteArray))
         bos.reset()
-        record.writeTo(bos)
+        pRecord.writeTo(bos)
         sender.writeValue(ModelServingConfiguration.MODELS_TOPIC, bos.toByteArray)
         pause()
+        // TF
+        val tByteArray = Files.readAllBytes(Paths.get(tensorfile))
+        val tRecord = ModelDescriptor(name = tensorfile.dropRight(3),
+          description = "generated from TensorFlow", modeltype = ModelDescriptor.ModelType.TENSORFLOW,
+          dataType = "wine").withData(ByteString.copyFrom(tByteArray))
+        bos.reset()
+        tRecord.writeTo(bos)
+        sender.writeValue(ModelServingConfiguration.MODELS_TOPIC, bos.toByteArray)
+        pause()
+
       })
-      pause()
     }
   }
 
