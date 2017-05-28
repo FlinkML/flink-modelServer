@@ -42,7 +42,6 @@ object ModelProvider {
         tRecord.writeTo(bos)
         sender.writeValue(ModelServingConfiguration.MODELS_TOPIC, bos.toByteArray)
         pause()
-
       })
     }
   }

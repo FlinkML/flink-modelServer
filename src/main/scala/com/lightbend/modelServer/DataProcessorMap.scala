@@ -27,9 +27,10 @@ class DataProcessorMap extends RichCoFlatMapFunction[WineRecord, ModelToServe, D
 
   override def flatMap2(model: ModelToServe, out: Collector[Double]): Unit = {
     println(s"New model - $model")
-    newModel = model.modelType match {
-      case ModelDescriptor.ModelType.PMML => Some(new PMMLModel(model.model))
-      case ModelDescriptor.ModelType.TENSORFLOW => Some(TensorFlowModel(model.model))
+    newModel =
+      model.modelType match {
+      case ModelDescriptor.ModelType.PMML => PMMLModel(model.model)               // PMML
+      case ModelDescriptor.ModelType.TENSORFLOW => TensorFlowModel(model.model)   // Tensorflow
       case _ => None // Not supported yet
     }
   }

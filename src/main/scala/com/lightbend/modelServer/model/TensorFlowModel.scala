@@ -44,9 +44,18 @@ class TensorFlowModel(inputStream: Array[Byte]) extends Model  {
     value._1.toDouble
   }
 
-  override def cleanup(): Unit = session.close
+  override def cleanup(): Unit = {
+    session.close
+    graph.close
+  }
 }
 
 object TensorFlowModel{
-  def apply(inputStream: Array[Byte]): TensorFlowModel = new TensorFlowModel(inputStream)
+  def apply(inputStream: Array[Byte]): Option[TensorFlowModel] = {
+    try {
+      Some(new TensorFlowModel(inputStream))
+    }catch{
+      case t: Throwable => None
+    }
+  }
 }

@@ -24,8 +24,8 @@ object ModelTester {
     val Tensormodel = TensorFlowModel(TensorflowbyteArray)
     println("PMML | Tensorflow")
     records.foreach(r => {
-      val presult = PMMLmodel.score(r.asInstanceOf[AnyVal]).asInstanceOf[Double]
-      val tresult = Tensormodel.score(r.asInstanceOf[AnyVal]).asInstanceOf[Double]
+      val presult = PMMLmodel.get.score(r.asInstanceOf[AnyVal]).asInstanceOf[Double]
+      val tresult = Tensormodel.get.score(r.asInstanceOf[AnyVal]).asInstanceOf[Double]
       println(s"$presult  | $tresult")
     })
   }

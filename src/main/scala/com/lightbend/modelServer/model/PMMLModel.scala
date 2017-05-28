@@ -71,7 +71,13 @@ class PMMLModel(inputStream: Array[Byte]) extends Model {
 
 object PMMLModel{
 
-  def apply(inputStream: Array[Byte]): PMMLModel = new PMMLModel(inputStream)
+  def apply(inputStream: Array[Byte]): Option[PMMLModel] = {
+    try {
+      Some(new PMMLModel(inputStream))
+    }catch{
+      case t: Throwable => None
+    }
+  }
   private val optimizers = Array(new ExpressionOptimizer, new FieldOptimizer, new PredicateOptimizer, new GeneralRegressionModelOptimizer, new NaiveBayesModelOptimizer, new RegressionModelOptimizer)
   def optimize(pmml : PMML) = this.synchronized {
     optimizers.foreach(opt =>

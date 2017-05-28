@@ -46,8 +46,8 @@ class DataProcessor extends RichCoProcessFunction[WineRecord, ModelToServe, Doub
     println(s"New model - $model")
     newModelState.update(new ModelToServeStats(model))
     newModel = model.modelType match {
-      case ModelDescriptor.ModelType.PMML => Some(PMMLModel(model.model))
-      case ModelDescriptor.ModelType.TENSORFLOW => Some(TensorFlowModel(model.model))
+      case ModelDescriptor.ModelType.PMML => PMMLModel(model.model)             // PMML
+      case ModelDescriptor.ModelType.TENSORFLOW => TensorFlowModel(model.model) // Tensorflow
       case _ => None // Not supported yet
     }
   }
