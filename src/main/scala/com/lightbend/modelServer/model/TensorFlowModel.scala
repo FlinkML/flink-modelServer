@@ -1,6 +1,5 @@
 package com.lightbend.modelServer.model
 
-import java.io.InputStream
 
 import com.lightbend.model.winerecord.WineRecord
 import org.tensorflow.{Graph, Session, Tensor}
@@ -9,11 +8,12 @@ import org.tensorflow.{Graph, Session, Tensor}
   * Created by boris on 5/26/17.
   * Implementation of tensorflow model
   */
-class TensorFlowModel(inputStream: Array[Byte]) extends Model  {
+
+class TensorFlowModel(inputStream : Array[Byte]) extends Model  {
 
   val graph = new Graph
   graph.importGraphDef(inputStream)
-  val session = new Session (graph)
+  val session = new Session(graph)
 
   override def score(input: AnyVal): AnyVal = {
 
@@ -45,8 +45,16 @@ class TensorFlowModel(inputStream: Array[Byte]) extends Model  {
   }
 
   override def cleanup(): Unit = {
-    session.close
-    graph.close
+    try{
+      session.close
+    }catch {
+      case t: Throwable =>    // Swallow
+    }
+    try{
+      graph.close
+    }catch {
+      case t: Throwable =>    // Swallow
+    }
   }
 }
 

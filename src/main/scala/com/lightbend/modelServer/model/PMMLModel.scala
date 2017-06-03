@@ -9,7 +9,7 @@ package com.lightbend.modelServer.model
 import org.jpmml.evaluator.{FieldValue, ModelEvaluatorFactory, TargetField}
 import org.jpmml.evaluator.visitors._
 import org.jpmml.model.PMMLUtil
-import java.io.{ByteArrayInputStream, InputStream}
+import java.io.{ByteArrayInputStream, ByteArrayOutputStream, InputStream}
 
 import org.jpmml.evaluator.Computable
 import com.lightbend.model.winerecord.WineRecord
@@ -65,6 +65,12 @@ class PMMLModel(inputStream: Array[Byte]) extends Model {
       v.asInstanceOf[Double]
     }
     case _ => .0
+  }
+
+  def toBytes : Array[Byte] = {
+    var stream = new ByteArrayOutputStream()
+    PMMLUtil.marshal(pmml, stream)
+    stream.toByteArray
   }
 
 }
