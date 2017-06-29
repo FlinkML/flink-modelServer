@@ -21,11 +21,15 @@ case class ModelToServe(name: String, description: String,
                         modelType: ModelDescriptor.ModelType,
                         model : Array[Byte], dataType : String) {}
 
-case class ModelToServeStats(name: String, description: String,
-                             modelType: ModelDescriptor.ModelType, since : Long, var usage : Long){
-  def this(m : ModelToServe) = this(m.name, m.description, m.modelType, System.currentTimeMillis(), 0L)
-  def incrementUsage() : ModelToServeStats = {
+case class ModelToServeStats(name: String, description: String, modelType: ModelDescriptor.ModelType,
+                             since : Long, var usage : Long = 0, var duration : Double = .0,
+                             var min : Long = Long.MaxValue, var max : Long = Long.MinValue){
+  def this(m : ModelToServe) = this(m.name, m.description, m.modelType, System.currentTimeMillis())
+  def incrementUsage(execution : Long) : ModelToServeStats = {
     usage = usage + 1
+    duration = duration + execution
+    if(execution < min) min = execution
+    if(execution > max) max = execution
     this
   }
 }

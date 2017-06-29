@@ -4,7 +4,7 @@ version := "1.0"
 
 scalaVersion := "2.11.8"
 
-lazy val flinkVersion = "1.2.0"
+lazy val flinkVersion = "1.2.1"
 lazy val scalaPB = "0.6.0-pre3"
 lazy val tensorflow = "1.1.0"
 lazy val PMML = "1.3.5"

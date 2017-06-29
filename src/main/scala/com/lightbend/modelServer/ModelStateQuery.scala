@@ -27,7 +27,7 @@ object ModelStateQuery {
 
 //  val parameterTool = ParameterTool.fromArgs(args)
 //  val jobId = JobID.fromHexString(parameterTool.get("job"))
-    val jobId = JobID.fromHexString("b5f1a882591256f3a5d163b683fd5aef")
+    val jobId = JobID.fromHexString("e129e8c9c225f7fea6cf5ff6770ebd43")
     val types = Array("wine")
 
     val config = new Configuration()
@@ -39,7 +39,7 @@ object ModelStateQuery {
     val keySerializer = createTypeInformation[String].createSerializer(execConfig)
     val valueSerializer = createTypeInformation[ModelToServeStats].createSerializer(execConfig)
 
-    println("                   Name                      |       Description       |       Since       | Used")
+    println("                   Name                      |       Description       |       Since       |       Average       |       Min       |       Max       |")
     while(true) {
       val stats = for (key <- types) yield {
         val serializedKey = KvStateRequestSerializer.serializeKeyAndNamespace(
@@ -53,7 +53,7 @@ object ModelStateQuery {
           val serializedResult = client.getKvState(jobId, "currentModel", key.hashCode(), serializedKey)
           val serializedValue = Await.result(serializedResult, FiniteDuration(2, TimeUnit.SECONDS))
           val value = KvStateRequestSerializer.deserializeValue(serializedValue, valueSerializer)
-          List(value.name, value.description, value.since, value.usage)
+          List(value.name, value.description, value.since, value.usage, value.duration, value.min, value.max)
         } catch {
           case e: Exception => {
             e.printStackTrace()
@@ -62,7 +62,8 @@ object ModelStateQuery {
         }
       }
       stats.toList.filter(_.nonEmpty).foreach(row =>
-        println(s" ${row(0)} | ${row(1)} | ${new DateTime(row(2)).toString("yyyy/MM/dd HH:MM:SS")} | ${row(3)}")
+        println(s" ${row(0)} | ${row(1)} | ${new DateTime(row(2)).toString("yyyy/MM/dd HH:MM:SS")} | ${row(3)} |" +
+          s" ${row(4).asInstanceOf[Double]/row(3).asInstanceOf[Long]} | ${row(5)} | ${row(6)} |")
       )
       Thread.sleep(timeInterval)
     }

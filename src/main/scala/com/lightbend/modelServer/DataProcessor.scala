@@ -1,6 +1,5 @@
 package com.lightbend.modelServer
 
-import java.io.ByteArrayInputStream
 
 import com.lightbend.model.modeldescriptor.ModelDescriptor
 import com.lightbend.model.winerecord.WineRecord
@@ -74,7 +73,7 @@ class DataProcessor extends RichCoProcessFunction[WineRecord, ModelToServe, Doub
         val start = System.currentTimeMillis()
         val quality = model.score(record.asInstanceOf[AnyVal]).asInstanceOf[Double]
         val duration = System.currentTimeMillis() - start
-        modelState.update(modelState.value().incrementUsage())
+        modelState.update(modelState.value().incrementUsage(duration))
         println(s"Calculated quality - $quality calculated in $duration ms")
       }
       case _ => println("No model available - skipping")

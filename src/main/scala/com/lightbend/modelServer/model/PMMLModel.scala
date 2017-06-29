@@ -30,8 +30,7 @@ class PMMLModel(inputStream: Array[Byte]) extends Model {
   PMMLModel.optimize(pmml)
 
   // Create and verify evaluator
-  val modelEvaluatorFactory = ModelEvaluatorFactory.newInstance
-  val evaluator = modelEvaluatorFactory.newModelEvaluator(pmml)
+  val evaluator = ModelEvaluatorFactory.newInstance.newModelEvaluator(pmml)
   evaluator.verify()
 
   // Get input/target fields

@@ -1,10 +1,6 @@
 package com.lightbend.kafka
 
-import java.io.{ByteArrayOutputStream, File}
-import java.nio.file.{Files, Paths}
-
-import com.google.protobuf.ByteString
-import com.lightbend.model.modeldescriptor.ModelDescriptor
+import java.io.ByteArrayOutputStream
 import com.lightbend.model.winerecord.WineRecord
 
 import scala.io.Source
