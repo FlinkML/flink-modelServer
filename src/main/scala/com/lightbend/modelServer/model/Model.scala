@@ -7,4 +7,6 @@ package com.lightbend.modelServer.model
 trait Model {
   def score(input : AnyVal) : AnyVal
   def cleanup() : Unit
+  def toBytes() : Array[Byte]
+  def getType : Long
 }

@@ -3,11 +3,12 @@ package com.lightbend.modelServer.model
 /**
   * Created by boris on 6/2/17.
   */
-import com.esotericsoftware.kryo.{Kryo, Serializer}
 import com.esotericsoftware.kryo.io.{Input, Output}
+import com.esotericsoftware.kryo.{Kryo, Serializer}
+import com.lightbend.model.modeldescriptor.ModelDescriptor
 
 
-class TensorFlowModelSerializerKryo extends Serializer[TensorFlowModel]{
+class ModelSerializerKryo extends Serializer[Model]{
   
   super.setAcceptsNull(false)
   super.setImmutable(true)
@@ -23,9 +24,16 @@ class TensorFlowModelSerializerKryo extends Serializer[TensorFlowModel]{
     *
     * @return May be null if { @link #getAcceptsNull()} is true. */
   
-  override def read(kryo: Kryo, input: Input, `type`: Class[TensorFlowModel]): TensorFlowModel = {
+  override def read(kryo: Kryo, input: Input, `type`: Class[Model]): Model = {
+
+    import ModelSerializerKryo._
+
+    val mType = input.readLong().asInstanceOf[Int]
     val bytes = Stream.continually(input.readByte()).takeWhile(_ != -1).toArray
-    TensorFlowModel(bytes).get
+    factories.get(mType) match {
+      case Some(factory) => factory.restore(bytes)
+      case _ => throw new Exception(s"Unknown model type $mType to restore")
+    }
   }
 
   /** Writes the bytes for the object to the output.
@@ -35,7 +43,13 @@ class TensorFlowModelSerializerKryo extends Serializer[TensorFlowModel]{
     *
     * @param value May be null if { @link #getAcceptsNull()} is true. */
   
-  override def write(kryo: Kryo, output: Output, value: TensorFlowModel): Unit = {
-    output.write(value.graph.toGraphDef)
+  override def write(kryo: Kryo, output: Output, value: Model): Unit = {
+    output.writeLong(value.getType)
+    output.write(value.toBytes)
   }
+}
+
+object ModelSerializerKryo{
+  private val factories = Map(ModelDescriptor.ModelType.PMML.value -> PMMLModel,
+    ModelDescriptor.ModelType.TENSORFLOW.value -> TensorFlowModel)
 }

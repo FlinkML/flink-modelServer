@@ -20,11 +20,11 @@ object ModelTester {
     // PMML
     val PMMLbyteArray = Files.readAllBytes(Paths.get(modelfilePMML))
     val TensorflowbyteArray = Files.readAllBytes(Paths.get(modelfileTensor))
-    val PMMLmodel = PMMLModel(PMMLbyteArray)
+    val PMMLmodel = PMMLModel.restore(PMMLbyteArray)
     val Tensormodel = TensorFlowModel(TensorflowbyteArray)
     println("PMML | Tensorflow")
     records.foreach(r => {
-      val presult = PMMLmodel.get.score(r.asInstanceOf[AnyVal]).asInstanceOf[Double]
+      val presult = PMMLmodel.score(r.asInstanceOf[AnyVal]).asInstanceOf[Double]
       val tresult = Tensormodel.get.score(r.asInstanceOf[AnyVal]).asInstanceOf[Double]
       println(s"$presult  | $tresult")
     })

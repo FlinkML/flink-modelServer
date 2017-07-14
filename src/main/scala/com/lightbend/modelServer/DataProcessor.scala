@@ -20,6 +20,8 @@ import com.lightbend.modelServer.model.{Model, PMMLModel, TensorFlowModel}
 
 object DataProcessor {
   def apply() = new DataProcessor
+  private val factories = Map(ModelDescriptor.ModelType.PMML -> PMMLModel,
+              ModelDescriptor.ModelType.TENSORFLOW -> TensorFlowModel)
 }
 
 class DataProcessor extends RichCoProcessFunction[WineRecord, ModelToServe, Double]{
@@ -42,12 +44,13 @@ class DataProcessor extends RichCoProcessFunction[WineRecord, ModelToServe, Doub
 
   override def processElement2(model: ModelToServe, ctx: CoProcessFunction.Context, out: Collector[Double]): Unit = {
 
+    import DataProcessor._
+
     println(s"New model - $model")
     newModelState.update(new ModelToServeStats(model))
-    newModel = model.modelType match {
-      case ModelDescriptor.ModelType.PMML => PMMLModel(model.model)             // PMML
-      case ModelDescriptor.ModelType.TENSORFLOW => TensorFlowModel(model.model) // Tensorflow
-      case _ => None // Not supported yet
+    newModel = factories.get(model.modelType) match {
+      case Some(factory) => factory.create (model)
+      case _ => None
     }
   }
 

@@ -1,21 +1,22 @@
 package com.lightbend.modelServer
 
-import java.io.ByteArrayInputStream
-
-import com.lightbend.model.modeldescriptor.ModelDescriptor
-import com.lightbend.model.winerecord.WineRecord
-import com.lightbend.modelServer.model.{Model, PMMLModel, TensorFlowModel}
-import org.apache.flink.streaming.api.functions.co.RichCoFlatMapFunction
-import org.apache.flink.util.Collector
-
 /**
   * Created by boris on 5/14/17.
   *
   * Main class processing data using models
   *
   */
+import com.lightbend.model.modeldescriptor.ModelDescriptor
+import com.lightbend.model.winerecord.WineRecord
+import com.lightbend.modelServer.model.{Model, PMMLModel, TensorFlowModel}
+import org.apache.flink.streaming.api.functions.co.RichCoFlatMapFunction
+import org.apache.flink.util.Collector
+
 object DataProcessorMap{
   def apply() : DataProcessorMap = new DataProcessorMap()
+
+  private val factories = Map(ModelDescriptor.ModelType.PMML -> PMMLModel,
+    ModelDescriptor.ModelType.TENSORFLOW -> TensorFlowModel)
 }
 
 class DataProcessorMap extends RichCoFlatMapFunction[WineRecord, ModelToServe, Double]{
@@ -26,12 +27,13 @@ class DataProcessorMap extends RichCoFlatMapFunction[WineRecord, ModelToServe, D
   var newModel : Option[Model] = None
 
   override def flatMap2(model: ModelToServe, out: Collector[Double]): Unit = {
+
+    import DataProcessorMap._
+
     println(s"New model - $model")
-    newModel =
-      model.modelType match {
-      case ModelDescriptor.ModelType.PMML => PMMLModel(model.model)               // PMML
-      case ModelDescriptor.ModelType.TENSORFLOW => TensorFlowModel(model.model)   // Tensorflow
-      case _ => None // Not supported yet
+    factories.get(model.modelType) match{
+      case Some(factory) => factory.create(model)
+      case _ => None
     }
   }
 

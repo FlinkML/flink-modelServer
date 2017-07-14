@@ -11,8 +11,10 @@ import org.jpmml.evaluator.visitors._
 import org.jpmml.model.PMMLUtil
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream, InputStream}
 
+import com.lightbend.model.modeldescriptor.ModelDescriptor
 import org.jpmml.evaluator.Computable
 import com.lightbend.model.winerecord.WineRecord
+import com.lightbend.modelServer.ModelToServe
 import org.dmg.pmml.{FieldName, PMML}
 
 import scala.collection._
@@ -72,17 +74,11 @@ class PMMLModel(inputStream: Array[Byte]) extends Model {
     stream.toByteArray
   }
 
+  override def getType: Long = ModelDescriptor.ModelType.PMML.value
 }
 
-object PMMLModel{
+object PMMLModel extends ModelFactory {
 
-  def apply(inputStream: Array[Byte]): Option[PMMLModel] = {
-    try {
-      Some(new PMMLModel(inputStream))
-    }catch{
-      case t: Throwable => None
-    }
-  }
   private val optimizers = Array(new ExpressionOptimizer, new FieldOptimizer, new PredicateOptimizer, new GeneralRegressionModelOptimizer, new NaiveBayesModelOptimizer, new RegressionModelOptimizer)
   def optimize(pmml : PMML) = this.synchronized {
     optimizers.foreach(opt =>
@@ -100,4 +96,14 @@ object PMMLModel{
     "volatile acidity" -> 1,"citric acid" ->2,"residual sugar" -> 3,
     "chlorides" -> 4,"free sulfur dioxide" -> 5,"total sulfur dioxide" -> 6,
     "density" -> 7,"pH" -> 8,"sulphates" ->9,"alcohol" -> 10)
+
+  override def create(input: ModelToServe): Option[Model] = {
+    try {
+      Some(new PMMLModel(input.model))
+    }catch{
+      case t: Throwable => None
+    }
+  }
+
+  override def restore(bytes: Array[Byte]): Model = new PMMLModel(bytes)
 }

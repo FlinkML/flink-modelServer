@@ -4,7 +4,7 @@ import java.util.Properties
 
 import com.lightbend.kafka.ModelServingConfiguration
 import com.lightbend.model.winerecord.WineRecord
-import com.lightbend.modelServer.model.{PMMLModelSerializerKryo, TensorFlowModel, TensorFlowModelSerializerKryo}
+import com.lightbend.modelServer.model.{ModelSerializerKryo, Model}
 import com.lightbend.modelServer.typeschema.ByteArraySchema
 import org.apache.flink.api.scala._
 import org.apache.flink.configuration.{ConfigConstants, Configuration, QueryableStateOptions}
@@ -82,9 +82,8 @@ object ModelServingFlatJob {
     env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime)
     env.enableCheckpointing(5000)
     // Add custom serializers
-    env.getConfig.addDefaultKryoSerializer(TensorFlowModel.getClass, classOf[TensorFlowModelSerializerKryo])
-    env.getConfig.addDefaultKryoSerializer(TensorFlowModel.getClass, classOf[PMMLModelSerializerKryo])
 
+    env.getConfig.addDefaultKryoSerializer(classOf[Model], classOf[ModelSerializerKryo])
 
     // configure Kafka consumer
     // Data

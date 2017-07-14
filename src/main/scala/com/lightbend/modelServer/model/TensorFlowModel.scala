@@ -1,7 +1,9 @@
 package com.lightbend.modelServer.model
 
 
+import com.lightbend.model.modeldescriptor.ModelDescriptor
 import com.lightbend.model.winerecord.WineRecord
+import com.lightbend.modelServer.ModelToServe
 import org.tensorflow.{Graph, Session, Tensor}
 
 /**
@@ -9,7 +11,7 @@ import org.tensorflow.{Graph, Session, Tensor}
   * Implementation of tensorflow model
   */
 
-class TensorFlowModel(inputStream : Array[Byte]) extends Model  {
+class TensorFlowModel(inputStream : Array[Byte]) extends Model{
 
   val graph = new Graph
   graph.importGraphDef(inputStream)
@@ -56,9 +58,13 @@ class TensorFlowModel(inputStream : Array[Byte]) extends Model  {
       case t: Throwable =>    // Swallow
     }
   }
+
+  override def toBytes(): Array[Byte] = graph.toGraphDef
+
+  override def getType: Long = ModelDescriptor.ModelType.TENSORFLOW.value
 }
 
-object TensorFlowModel{
+object TensorFlowModel extends  ModelFactory {
   def apply(inputStream: Array[Byte]): Option[TensorFlowModel] = {
     try {
       Some(new TensorFlowModel(inputStream))
@@ -66,4 +72,14 @@ object TensorFlowModel{
       case t: Throwable => None
     }
   }
+
+  override def create(input: ModelToServe): Option[Model] = {
+    try {
+      Some(new TensorFlowModel(input.model))
+    }catch{
+      case t: Throwable => None
+    }
+  }
+
+  override def restore(bytes: Array[Byte]): Model = new TensorFlowModel(bytes)
 }
