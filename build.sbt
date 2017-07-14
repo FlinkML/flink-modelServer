@@ -2,23 +2,31 @@ name := "FlinkModelServer"
 
 version := "1.0"
 
-scalaVersion := "2.11.8"
+scalaVersion := "2.11.11"
 
-lazy val flinkVersion = "1.2.1"
-lazy val scalaPB = "0.6.0-pre3"
-lazy val tensorflow = "1.1.0"
-lazy val PMML = "1.3.5"
-lazy val kafka = "0.10.0.1"
+lazy val protobufs = (project in file("./protobufs"))
+  .settings(
+    PB.targets in Compile := Seq(
+    scalapb.gen() -> (sourceManaged in Compile).value
+  ))
 
-PB.targets in Compile := Seq(
-  scalapb.gen() -> (sourceManaged in Compile).value
-)
-libraryDependencies ++= Seq(
-  "org.apache.flink" %% "flink-scala" % flinkVersion, // % "provided",
-  "org.apache.flink" %% "flink-streaming-scala" % flinkVersion, // % "provided",
-  "org.apache.flink" % "flink-connector-kafka-0.10_2.11" % flinkVersion,
-  "org.apache.kafka" % "kafka_2.11" % kafka,
-  "org.tensorflow" % "tensorflow" % tensorflow,
-  "org.jpmml" % "pmml-evaluator" % PMML,
-  "org.jpmml" % "pmml-evaluator-extension" % PMML
-)
+lazy val client = (project in file("./client"))
+  .settings(libraryDependencies ++= Seq(Dependencies.kafka))
+  .dependsOn(protobufs, configuration)
+
+lazy val model = (project in file("./model"))
+  .settings(libraryDependencies ++= Dependencies.modelsDependencies ++ Seq(Dependencies.kryo))
+  .dependsOn(protobufs)
+
+lazy val query = (project in file("./query"))
+  .settings(libraryDependencies ++= Dependencies.flinkDependencies ++ Seq(Dependencies.joda))
+  .dependsOn(model)
+
+lazy val server = (project in file("./server"))
+  .settings(libraryDependencies ++= Dependencies.flinkDependencies ++ Dependencies.modelsDependencies)
+  .dependsOn(model, configuration)
+
+lazy val configuration = (project in file("./configuration"))
+
+lazy val root = (project in file(".")).
+  aggregate(protobufs, query, client, model, configuration, server)
