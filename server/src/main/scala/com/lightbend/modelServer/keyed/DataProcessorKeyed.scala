@@ -2,7 +2,9 @@ package com.lightbend.modelServer.keyed
 
 import com.lightbend.model.modeldescriptor.ModelDescriptor
 import com.lightbend.model.winerecord.WineRecord
-import com.lightbend.modelServer.model.{Model, PMMLModel, TensorFlowModel}
+import com.lightbend.modelServer.model.Model
+import com.lightbend.modelServer.model.PMML.PMMLModel
+import com.lightbend.modelServer.model.tensorflow.TensorFlowModel
 import com.lightbend.modelServer.{ModelToServe, ModelToServeStats}
 import org.apache.flink.api.common.state.{ValueState, ValueStateDescriptor}
 import org.apache.flink.api.scala.createTypeInformation

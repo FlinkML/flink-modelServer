@@ -9,7 +9,9 @@ package com.lightbend.modelServer.partitioned
 import com.lightbend.model.modeldescriptor.ModelDescriptor
 import com.lightbend.model.winerecord.WineRecord
 import com.lightbend.modelServer.ModelToServe
-import com.lightbend.modelServer.model.{Model, PMMLModel, TensorFlowModel}
+import com.lightbend.modelServer.model.Model
+import com.lightbend.modelServer.model.PMML.PMMLModel
+import com.lightbend.modelServer.model.tensorflow.TensorFlowModel
 import org.apache.flink.streaming.api.functions.co.RichCoFlatMapFunction
 import org.apache.flink.util.Collector
 

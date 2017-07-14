@@ -4,7 +4,9 @@ import java.util.Properties
 
 import com.lightbend.kafka.configuration.ModelServingConfiguration
 import com.lightbend.model.winerecord.WineRecord
-import com.lightbend.modelServer.model.{ModelSerializerKryo, PMMLModel, TensorFlowModel}
+import com.lightbend.modelServer.model.PMML.PMMLModel
+import com.lightbend.modelServer.model.ModelSerializerKryo
+import com.lightbend.modelServer.model.tensorflow.TensorFlowModel
 import com.lightbend.modelServer.typeschema.ByteArraySchema
 import com.lightbend.modelServer.{BadDataHandler, DataRecord, ModelToServe}
 import org.apache.flink.api.scala._

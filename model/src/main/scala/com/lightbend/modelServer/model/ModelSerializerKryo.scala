@@ -6,6 +6,8 @@ package com.lightbend.modelServer.model
 import com.lightbend.model.modeldescriptor.ModelDescriptor
 import com.esotericsoftware.kryo.io.{Input, Output}
 import com.esotericsoftware.kryo.{Kryo, Serializer}
+import com.lightbend.modelServer.model.PMML.PMMLModel
+import com.lightbend.modelServer.model.tensorflow.TensorFlowModel
 
 class ModelSerializerKryo extends Serializer[Model]{
   
