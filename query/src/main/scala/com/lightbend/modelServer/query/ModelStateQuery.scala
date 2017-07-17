@@ -26,7 +26,7 @@ object ModelStateQuery {
 
   def main(args: Array[String]) {
 
-    val jobId = JobID.fromHexString("41adc901b28ce3ea72ee2ada9d41f50b")
+    val jobId = JobID.fromHexString("22f36c6522e511262037c772c8c0e501")
     val types = Array("wine")
 
     val config = new Configuration()

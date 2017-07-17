@@ -68,7 +68,7 @@ class PMMLModel(inputStream: Array[Byte]) extends Model {
     case _ => .0
   }
 
-  def toBytes : Array[Byte] = {
+  override def toBytes : Array[Byte] = {
     var stream = new ByteArrayOutputStream()
     PMMLUtil.marshal(pmml, stream)
     stream.toByteArray
