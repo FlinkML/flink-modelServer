@@ -12,6 +12,10 @@ import com.lightbend.modelServer.ModelToServe
 import com.lightbend.modelServer.model.Model
 import com.lightbend.modelServer.model.PMML.PMMLModel
 import com.lightbend.modelServer.model.tensorflow.TensorFlowModel
+import com.lightbend.modelServer.typeschema.ModelTypeSerializer
+import org.apache.flink.api.common.state.{ListState, ListStateDescriptor}
+import org.apache.flink.runtime.state.{FunctionInitializationContext, FunctionSnapshotContext}
+import org.apache.flink.streaming.api.checkpoint.{CheckpointedFunction, CheckpointedRestoring}
 import org.apache.flink.streaming.api.functions.co.RichCoFlatMapFunction
 import org.apache.flink.util.Collector
 
@@ -22,12 +26,37 @@ object DataProcessorMap{
     ModelDescriptor.ModelType.TENSORFLOW -> TensorFlowModel)
 }
 
-class DataProcessorMap extends RichCoFlatMapFunction[WineRecord, ModelToServe, Double]{
+class DataProcessorMap extends RichCoFlatMapFunction[WineRecord, ModelToServe, Double]
+        with CheckpointedFunction with CheckpointedRestoring[List[Option[Model]]] {
 
-
-  // The raw state - https://ci.apache.org/projects/flink/flink-docs-release-1.3/dev/stream/state.html#raw-and-managed-state
   var currentModel : Option[Model] = None
   var newModel : Option[Model] = None
+  @transient private var checkpointedState: ListState[Option[Model]] = null
+
+  override def snapshotState(context: FunctionSnapshotContext): Unit = {
+    checkpointedState.clear()
+    checkpointedState.add(currentModel)
+    checkpointedState.add(newModel)
+  }
+
+  override def initializeState(context: FunctionInitializationContext): Unit = {
+    val descriptor = new ListStateDescriptor[Option[Model]] (
+        "modelState",
+        new ModelTypeSerializer)
+
+    checkpointedState = context.getOperatorStateStore.getListState (descriptor)
+
+    if (context.isRestored) {
+      val iterator = checkpointedState.get().iterator()
+      currentModel = iterator.next()
+      newModel = iterator.next()
+    }
+  }
+
+  override def restoreState(state: List[Option[Model]]): Unit = {
+    currentModel = state(0)
+    newModel = state(1)
+  }
 
   override def flatMap2(model: ModelToServe, out: Collector[Double]): Unit = {
 

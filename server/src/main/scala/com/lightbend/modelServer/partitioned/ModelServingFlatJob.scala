@@ -4,7 +4,6 @@ import java.util.Properties
 
 import com.lightbend.kafka.configuration.ModelServingConfiguration
 import com.lightbend.model.winerecord.WineRecord
-import com.lightbend.modelServer.model.{Model, ModelSerializerKryo}
 import com.lightbend.modelServer.typeschema.ByteArraySchema
 import com.lightbend.modelServer.{BadDataHandler, DataRecord, ModelToServe}
 import org.apache.flink.api.scala._
@@ -95,17 +94,12 @@ object ModelServingFlatJob {
   def buildGraph(env : StreamExecutionEnvironment) : Unit = {
     env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime)
     env.enableCheckpointing(5000)
-    // Add custom serializers
-
-    env.getConfig.addDefaultKryoSerializer(classOf[Model], classOf[ModelSerializerKryo])
-
     // configure Kafka consumer
     // Data
     val dataKafkaProps = new Properties
     dataKafkaProps.setProperty("zookeeper.connect", ModelServingConfiguration.LOCAL_ZOOKEEPER_HOST)
     dataKafkaProps.setProperty("bootstrap.servers", ModelServingConfiguration.LOCAL_KAFKA_BROKER)
     dataKafkaProps.setProperty("group.id", ModelServingConfiguration.DATA_GROUP)
-    // always read the Kafka topic from the current location
     dataKafkaProps.setProperty("auto.offset.reset", "latest")
 
     // Model

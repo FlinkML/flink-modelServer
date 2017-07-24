@@ -5,10 +5,13 @@ import com.lightbend.model.winerecord.WineRecord
 import com.lightbend.modelServer.model.Model
 import com.lightbend.modelServer.model.PMML.PMMLModel
 import com.lightbend.modelServer.model.tensorflow.TensorFlowModel
+import com.lightbend.modelServer.typeschema.ModelTypeSerializer
 import com.lightbend.modelServer.{ModelToServe, ModelToServeStats}
-import org.apache.flink.api.common.state.{ValueState, ValueStateDescriptor}
+import org.apache.flink.api.common.state.{ListState, ListStateDescriptor, ValueState, ValueStateDescriptor}
 import org.apache.flink.api.scala.createTypeInformation
 import org.apache.flink.configuration.Configuration
+import org.apache.flink.runtime.state.{FunctionInitializationContext, FunctionSnapshotContext}
+import org.apache.flink.streaming.api.checkpoint.{CheckpointedFunction, CheckpointedRestoring}
 import org.apache.flink.streaming.api.functions.co.CoProcessFunction
 import org.apache.flink.util.Collector
 
@@ -26,14 +29,18 @@ object DataProcessorKeyed {
               ModelDescriptor.ModelType.TENSORFLOW -> TensorFlowModel)
 }
 
-class DataProcessorKeyed extends CoProcessFunction[WineRecord, ModelToServe, Double]{
+class DataProcessorKeyed extends CoProcessFunction[WineRecord, ModelToServe, Double]
+        with CheckpointedFunction with CheckpointedRestoring[List[Option[Model]]] {
 
   // The managed keyed state see https://ci.apache.org/projects/flink/flink-docs-release-1.3/dev/stream/state.html
   var modelState: ValueState[ModelToServeStats] = _
   var newModelState: ValueState[ModelToServeStats] = _
-  // The raw state - https://ci.apache.org/projects/flink/flink-docs-release-1.3/dev/stream/state.html#raw-and-managed-state
+
   var currentModel : Option[Model] = None
   var newModel : Option[Model] = None
+
+  @transient private var checkpointedState: ListState[Option[Model]] = null
+
 
   override def open(parameters: Configuration): Unit = {
     val modelDesc = new ValueStateDescriptor[ModelToServeStats](
@@ -46,7 +53,32 @@ class DataProcessorKeyed extends CoProcessFunction[WineRecord, ModelToServe, Dou
       "newModel",         // state name
       createTypeInformation[ModelToServeStats])  // type information
     newModelState = getRuntimeContext.getState(newModelDesc)
-   }
+  }
+
+  override def snapshotState(context: FunctionSnapshotContext): Unit = {
+    checkpointedState.clear()
+    checkpointedState.add(currentModel)
+    checkpointedState.add(newModel)
+  }
+
+  override def initializeState(context: FunctionInitializationContext): Unit = {
+    val descriptor = new ListStateDescriptor[Option[Model]] (
+      "modelState",
+      new ModelTypeSerializer)
+
+    checkpointedState = context.getOperatorStateStore.getListState (descriptor)
+
+    if (context.isRestored) {
+      val iterator = checkpointedState.get().iterator()
+      currentModel = iterator.next()
+      newModel = iterator.next()
+    }
+  }
+
+  override def restoreState(state: List[Option[Model]]): Unit = {
+    currentModel = state(0)
+    newModel = state(1)
+  }
 
   override def processElement2(model: ModelToServe, ctx: CoProcessFunction[WineRecord, ModelToServe, Double]#Context, out: Collector[Double]): Unit = {
 
