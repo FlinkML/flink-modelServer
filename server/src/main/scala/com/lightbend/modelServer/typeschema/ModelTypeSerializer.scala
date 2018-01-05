@@ -1,8 +1,27 @@
+/*
+ * Copyright (C) 2017  Lightbend
+ *
+ * This file is part of flink-ModelServing
+ *
+ * flink-ModelServing is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
 package com.lightbend.modelServer.typeschema
 
 import java.io.IOException
 
 import com.lightbend.model.modeldescriptor.ModelDescriptor
+import com.lightbend.modelServer.ModelToServe
 import org.apache.flink.api.common.typeutils.{CompatibilityResult, GenericTypeSerializerConfigSnapshot, TypeSerializer, TypeSerializerConfigSnapshot}
 import com.lightbend.modelServer.model.Model
 import com.lightbend.modelServer.model.PMML.PMMLModel
@@ -21,7 +40,7 @@ class ModelTypeSerializer extends TypeSerializer[Option[Model]] {
 
   override def ensureCompatibility(configSnapshot: TypeSerializerConfigSnapshot): CompatibilityResult[Option[Model]] =
     configSnapshot match{
-      case _ : ModelSerializerConfigSnapshot[Model] => CompatibilityResult.compatible()
+      case _ : ModelSerializerConfigSnapshot => CompatibilityResult.compatible()
       case _ => CompatibilityResult.requiresMigration()
     }
 
@@ -44,17 +63,9 @@ class ModelTypeSerializer extends TypeSerializer[Option[Model]] {
 
   override def snapshotConfiguration(): TypeSerializerConfigSnapshot = new ModelSerializerConfigSnapshot
 
-  override def copy(from: Option[Model]): Option[Model] =
-    from match {
-      case Some(model) => Some(factories.get(model.getType.asInstanceOf[Int]).get.restore(model.toBytes()))
-      case _ => None
-    }
+  override def copy(from: Option[Model]): Option[Model] = ModelToServe.copy(from)
 
-  override def copy(from: Option[Model], reuse: Option[Model]): Option[Model] =
-    from match {
-      case Some(model) => Some(factories.get(model.getType.asInstanceOf[Int]).get.restore(model.toBytes()))
-      case _ => None
-    }
+  override def copy(from: Option[Model], reuse: Option[Model]): Option[Model] = ModelToServe.copy(from)
 
   override def copy(source: DataInputView, target: DataOutputView): Unit = {
     val exist = source.readBoolean()
@@ -79,7 +90,7 @@ class ModelTypeSerializer extends TypeSerializer[Option[Model]] {
         val size = source.readLong().asInstanceOf[Int]
         val content = new Array[Byte] (size)
         source.read (content)
-        Some(factories.get(t).get.restore(content))
+        ModelToServe.restore(t, content)
       }
       case _ => None
     }
@@ -91,7 +102,7 @@ class ModelTypeSerializer extends TypeSerializer[Option[Model]] {
         val size = source.readLong().asInstanceOf[Int]
         val content = new Array[Byte] (size)
         source.read (content)
-        Some(factories.get(t).get.restore(content))
+        ModelToServe.restore(t, content)
       }
       case _ => None
     }
@@ -102,8 +113,6 @@ class ModelTypeSerializer extends TypeSerializer[Option[Model]] {
 }
 
 object ModelTypeSerializer{
-  private val factories = Map(ModelDescriptor.ModelType.PMML.value -> PMMLModel,
-    ModelDescriptor.ModelType.TENSORFLOW.value -> TensorFlowModel)
 
   def apply : ModelTypeSerializer = new ModelTypeSerializer()
 }
@@ -113,7 +122,7 @@ object ModelSerializerConfigSnapshot {
   val VERSION = 1
 }
 
-class ModelSerializerConfigSnapshot[T <: Model]
+class ModelSerializerConfigSnapshot
                                 extends TypeSerializerConfigSnapshot{
 
   import ModelSerializerConfigSnapshot._
@@ -140,8 +149,6 @@ class ModelSerializerConfigSnapshot[T <: Model]
         throw new IOException("Could not find the requested class " + genericTypeClassname + " in classpath.", e)
     }
   }
-
-  def getTypeClass: Class[T] = typeClass.asInstanceOf[Class[T]]
 
   override def equals(obj: Any): Boolean = {
     if (obj == this) return true

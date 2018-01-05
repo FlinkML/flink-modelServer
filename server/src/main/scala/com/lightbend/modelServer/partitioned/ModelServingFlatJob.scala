@@ -1,3 +1,21 @@
+/*
+ * Copyright (C) 2017  Lightbend
+ *
+ * This file is part of flink-ModelServing
+ *
+ * flink-ModelServing is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
 package com.lightbend.modelServer.partitioned
 
 import java.util.Properties
@@ -7,7 +25,7 @@ import com.lightbend.model.winerecord.WineRecord
 import com.lightbend.modelServer.typeschema.ByteArraySchema
 import com.lightbend.modelServer.{BadDataHandler, DataRecord, ModelToServe}
 import org.apache.flink.api.scala._
-import org.apache.flink.configuration.{ConfigConstants, Configuration, JobManagerOptions, QueryableStateOptions}
+import org.apache.flink.configuration.{ConfigConstants, Configuration, JobManagerOptions}
 import org.apache.flink.runtime.concurrent.Executors
 import org.apache.flink.runtime.highavailability.HighAvailabilityServicesUtils
 import org.apache.flink.runtime.minicluster.LocalFlinkMiniCluster
@@ -54,7 +72,6 @@ object ModelServingFlatJob {
     config.setString(JobManagerOptions.ADDRESS, "localhost");
     config.setInteger(ConfigConstants.TASK_MANAGER_NUM_TASK_SLOTS, parallelism)
     // In a non MiniCluster setup queryable state is enabled by default.
-    config.setBoolean(QueryableStateOptions.SERVER_ENABLE, true)
     config.setBoolean(ConfigConstants.LOCAL_START_WEBSERVER, true);
     // needed because queryable state server is always disabled with only one TaskManager
     config.setInteger(ConfigConstants.LOCAL_NUMBER_TASK_MANAGER, 2);
@@ -100,7 +117,7 @@ object ModelServingFlatJob {
     dataKafkaProps.setProperty("zookeeper.connect", ModelServingConfiguration.LOCAL_ZOOKEEPER_HOST)
     dataKafkaProps.setProperty("bootstrap.servers", ModelServingConfiguration.LOCAL_KAFKA_BROKER)
     dataKafkaProps.setProperty("group.id", ModelServingConfiguration.DATA_GROUP)
-    dataKafkaProps.setProperty("auto.offset.reset", "latest")
+    dataKafkaProps.setProperty("auto.offset.reset", "earliest")
 
     // Model
     val modelKafkaProps = new Properties

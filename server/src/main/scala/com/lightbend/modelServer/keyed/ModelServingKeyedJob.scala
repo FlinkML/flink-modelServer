@@ -1,3 +1,21 @@
+/*
+ * Copyright (C) 2017  Lightbend
+ *
+ * This file is part of flink-ModelServing
+ *
+ * flink-ModelServing is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
 package com.lightbend.modelServer.keyed
 
 import java.util.Properties
@@ -53,11 +71,18 @@ object ModelServingKeyedJob {
     config.setInteger(JobManagerOptions.PORT, port)
     config.setString(JobManagerOptions.ADDRESS, "localhost");
     config.setInteger(ConfigConstants.TASK_MANAGER_NUM_TASK_SLOTS, parallelism)
+
     // In a non MiniCluster setup queryable state is enabled by default.
-    config.setBoolean(QueryableStateOptions.SERVER_ENABLE, true)
-    config.setBoolean(ConfigConstants.LOCAL_START_WEBSERVER, true);
+    config.setString(QueryableStateOptions.PROXY_PORT_RANGE, "9069")
+    config.setInteger(QueryableStateOptions.PROXY_NETWORK_THREADS, 2)
+    config.setInteger(QueryableStateOptions.PROXY_ASYNC_QUERY_THREADS, 2)
+
+    config.setString(QueryableStateOptions.SERVER_PORT_RANGE, "9067")
+    config.setInteger(QueryableStateOptions.SERVER_NETWORK_THREADS, 2)
+    config.setInteger(QueryableStateOptions.SERVER_ASYNC_QUERY_THREADS, 2)
+
     // needed because queryable state server is always disabled with only one TaskManager
-    config.setInteger(ConfigConstants.LOCAL_NUMBER_TASK_MANAGER, 2);
+//    config.setInteger(ConfigConstants.LOCAL_NUMBER_TASK_MANAGER, 2);
 
     // Create a local Flink server
     val flinkCluster = new LocalFlinkMiniCluster(
@@ -104,7 +129,7 @@ object ModelServingKeyedJob {
     dataKafkaProps.setProperty("bootstrap.servers", ModelServingConfiguration.LOCAL_KAFKA_BROKER)
     dataKafkaProps.setProperty("group.id", ModelServingConfiguration.DATA_GROUP)
     // always read the Kafka topic from the current location
-    dataKafkaProps.setProperty("auto.offset.reset", "latest")
+    dataKafkaProps.setProperty("auto.offset.reset", "earliest")
 
     // Model
     val modelKafkaProps = new Properties

@@ -1,3 +1,21 @@
+/*
+ * Copyright (C) 2017  Lightbend
+ *
+ * This file is part of flink-ModelServing
+ *
+ * flink-ModelServing is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
 package com.lightbend.modelServer.partitioned
 
 /**
@@ -15,19 +33,15 @@ import com.lightbend.modelServer.model.tensorflow.TensorFlowModel
 import com.lightbend.modelServer.typeschema.ModelTypeSerializer
 import org.apache.flink.api.common.state.{ListState, ListStateDescriptor}
 import org.apache.flink.runtime.state.{FunctionInitializationContext, FunctionSnapshotContext}
-import org.apache.flink.streaming.api.checkpoint.{CheckpointedFunction, CheckpointedRestoring}
+import org.apache.flink.streaming.api.checkpoint.CheckpointedFunction
 import org.apache.flink.streaming.api.functions.co.RichCoFlatMapFunction
 import org.apache.flink.util.Collector
 
 object DataProcessorMap{
   def apply() : DataProcessorMap = new DataProcessorMap()
-
-  private val factories = Map(ModelDescriptor.ModelType.PMML -> PMMLModel,
-    ModelDescriptor.ModelType.TENSORFLOW -> TensorFlowModel)
 }
 
-class DataProcessorMap extends RichCoFlatMapFunction[WineRecord, ModelToServe, Double]
-        with CheckpointedFunction with CheckpointedRestoring[List[Option[Model]]] {
+class DataProcessorMap extends RichCoFlatMapFunction[WineRecord, ModelToServe, Double] with CheckpointedFunction{
 
   var currentModel : Option[Model] = None
   var newModel : Option[Model] = None
@@ -53,20 +67,12 @@ class DataProcessorMap extends RichCoFlatMapFunction[WineRecord, ModelToServe, D
     }
   }
 
-  override def restoreState(state: List[Option[Model]]): Unit = {
-    currentModel = state(0)
-    newModel = state(1)
-  }
-
   override def flatMap2(model: ModelToServe, out: Collector[Double]): Unit = {
 
     import DataProcessorMap._
 
     println(s"New model - $model")
-    newModel = factories.get(model.modelType) match{
-      case Some(factory) => factory.create(model)
-      case _ => None
-    }
+    newModel = ModelToServe.toModel(model)
   }
 
   override def flatMap1(record: WineRecord, out: Collector[Double]): Unit = {
