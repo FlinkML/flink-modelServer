@@ -64,17 +64,12 @@ object ModelServingFlatJob {
     // contained in this JAR.
 
     val port = 6124
-    val parallelism = 4
-
+    val parallelism = 2
 
     val config = new Configuration()
     config.setInteger(JobManagerOptions.PORT, port)
     config.setString(JobManagerOptions.ADDRESS, "localhost");
     config.setInteger(ConfigConstants.TASK_MANAGER_NUM_TASK_SLOTS, parallelism)
-    // In a non MiniCluster setup queryable state is enabled by default.
-    config.setBoolean(ConfigConstants.LOCAL_START_WEBSERVER, true);
-    // needed because queryable state server is always disabled with only one TaskManager
-    config.setInteger(ConfigConstants.LOCAL_NUMBER_TASK_MANAGER, 2);
 
     // Create a local Flink server
     val flinkCluster = new LocalFlinkMiniCluster(

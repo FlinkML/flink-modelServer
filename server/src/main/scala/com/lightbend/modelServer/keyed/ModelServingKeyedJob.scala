@@ -81,8 +81,6 @@ object ModelServingKeyedJob {
     config.setInteger(QueryableStateOptions.SERVER_NETWORK_THREADS, 2)
     config.setInteger(QueryableStateOptions.SERVER_ASYNC_QUERY_THREADS, 2)
 
-    // needed because queryable state server is always disabled with only one TaskManager
-//    config.setInteger(ConfigConstants.LOCAL_NUMBER_TASK_MANAGER, 2);
 
     // Create a local Flink server
     val flinkCluster = new LocalFlinkMiniCluster(
