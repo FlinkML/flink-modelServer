@@ -18,19 +18,14 @@
 
 package com.lightbend.modelServer.typeschema
 
-import java.io.IOException
 
-import com.lightbend.model.modeldescriptor.ModelDescriptor
 import com.lightbend.modelServer.ModelToServe
 import org.apache.flink.api.common.typeutils.{CompatibilityResult, GenericTypeSerializerConfigSnapshot, TypeSerializer, TypeSerializerConfigSnapshot}
 import com.lightbend.modelServer.model.Model
-import com.lightbend.modelServer.model.PMML.PMMLModel
-import com.lightbend.modelServer.model.tensorflow.TensorFlowModel
 import org.apache.flink.core.memory.{DataInputView, DataOutputView}
 
 class ModelTypeSerializer extends TypeSerializer[Option[Model]] {
 
-  import ModelTypeSerializer._
 
   override def createInstance(): Option[Model] = None
 
@@ -46,13 +41,12 @@ class ModelTypeSerializer extends TypeSerializer[Option[Model]] {
 
   override def serialize(record: Option[Model], target: DataOutputView): Unit = {
     record match {
-      case Some(model) => {
+      case Some(model) =>
         target.writeBoolean(true)
         val content = model.toBytes()
         target.writeLong(model.getType)
         target.writeLong(content.length)
         target.write(content)
-      }
       case _ => target.writeBoolean(false)
     }
   }
@@ -71,41 +65,29 @@ class ModelTypeSerializer extends TypeSerializer[Option[Model]] {
     val exist = source.readBoolean()
     target.writeBoolean(exist)
     exist match {
-      case true => {
+      case true =>
         target.writeLong (source.readLong () )
         val clen = source.readLong ().asInstanceOf[Int]
         target.writeLong (clen)
         val content = new Array[Byte] (clen)
         source.read (content)
         target.write (content)
-      }
       case _ =>
     }
   }
 
   override def deserialize(source: DataInputView): Option[Model] =
     source.readBoolean() match {
-      case true => {
+      case true =>
         val t = source.readLong().asInstanceOf[Int]
         val size = source.readLong().asInstanceOf[Int]
         val content = new Array[Byte] (size)
         source.read (content)
         ModelToServe.restore(t, content)
-      }
       case _ => None
     }
 
-  override def deserialize(reuse: Option[Model], source: DataInputView): Option[Model] =
-    source.readBoolean() match {
-      case true => {
-        val t = source.readLong().asInstanceOf[Int]
-        val size = source.readLong().asInstanceOf[Int]
-        val content = new Array[Byte] (size)
-        source.read (content)
-        ModelToServe.restore(t, content)
-      }
-      case _ => None
-    }
+  override def deserialize(reuse: Option[Model], source: DataInputView): Option[Model] = deserialize(source)
 
   override def equals(obj: scala.Any): Boolean = obj.isInstanceOf[ModelTypeSerializer]
 
@@ -139,21 +121,12 @@ class ModelSerializerConfigSnapshot
     out.writeUTF(classOf[Model].getName)
   }
 
-  override def read(in: DataInputView): Unit = {
-    super.read(in)
-    val genericTypeClassname = in.readUTF
-    try
-      typeClass = Class.forName(genericTypeClassname, true, getUserCodeClassLoader).asInstanceOf[Class[Model]]
-    catch {
-      case e: ClassNotFoundException =>
-        throw new IOException("Could not find the requested class " + genericTypeClassname + " in classpath.", e)
-    }
-  }
-
   override def equals(obj: Any): Boolean = {
-    if (obj == this) return true
-    if (obj == null) return false
-    (obj.getClass == getClass) && typeClass == obj.asInstanceOf[GenericTypeSerializerConfigSnapshot[_]].getTypeClass
+    obj match {
+      case null => false
+      case value if value == this => true
+      case _ =>  (obj.getClass == getClass) && typeClass == obj.asInstanceOf[GenericTypeSerializerConfigSnapshot[_]].getTypeClass
+    }
   }
 
   override def hashCode: Int = 42

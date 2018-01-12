@@ -18,11 +18,8 @@
 
 package com.lightbend.modelServer.keyed
 
-import com.lightbend.model.modeldescriptor.ModelDescriptor
 import com.lightbend.model.winerecord.WineRecord
 import com.lightbend.modelServer.model.Model
-import com.lightbend.modelServer.model.PMML.PMMLModel
-import com.lightbend.modelServer.model.tensorflow.TensorFlowModel
 import com.lightbend.modelServer.typeschema.ModelTypeSerializer
 import com.lightbend.modelServer.{ModelToServe, ModelToServeStats}
 import org.apache.flink.api.common.state.{ListState, ListStateDescriptor, ValueState, ValueStateDescriptor}
@@ -61,7 +58,6 @@ class DataProcessorKeyed extends CoProcessFunction[WineRecord, ModelToServe, Dou
       "currentModel",   // state name
       createTypeInformation[ModelToServeStats]) // type information
     modelDesc.setQueryable("currentModel")
-
     modelState = getRuntimeContext.getState(modelDesc)
     val newModelDesc = new ValueStateDescriptor[ModelToServeStats](
       "newModel",         // state name
@@ -91,8 +87,6 @@ class DataProcessorKeyed extends CoProcessFunction[WineRecord, ModelToServe, Dou
 
   override def processElement2(model: ModelToServe, ctx: CoProcessFunction[WineRecord, ModelToServe, Double]#Context, out: Collector[Double]): Unit = {
 
-    import DataProcessorKeyed._
-
     println(s"New model - $model")
     newModelState.update(new ModelToServeStats(model))
     newModel = ModelToServe.toModel(model)
@@ -109,12 +103,14 @@ class DataProcessorKeyed extends CoProcessFunction[WineRecord, ModelToServe, Dou
           case _ =>
         }
         // Update model
-        currentModel = Some(model)
+        currentModel = newModel
         modelState.update(newModelState.value())
         newModel = None
       }
       case _ =>
     }
+
+    // Actually process data
     currentModel match {
       case Some(model) => {
         val start = System.currentTimeMillis()

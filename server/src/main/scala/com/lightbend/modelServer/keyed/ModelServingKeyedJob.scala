@@ -120,34 +120,36 @@ object ModelServingKeyedJob {
     env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime)
     env.enableCheckpointing(5000)
 
+    import ModelServingConfiguration._
+
     // configure Kafka consumer
     // Data
     val dataKafkaProps = new Properties
-    dataKafkaProps.setProperty("zookeeper.connect", ModelServingConfiguration.LOCAL_ZOOKEEPER_HOST)
-    dataKafkaProps.setProperty("bootstrap.servers", ModelServingConfiguration.LOCAL_KAFKA_BROKER)
-    dataKafkaProps.setProperty("group.id", ModelServingConfiguration.DATA_GROUP)
+    dataKafkaProps.setProperty("zookeeper.connect", LOCAL_ZOOKEEPER_HOST)
+    dataKafkaProps.setProperty("bootstrap.servers", LOCAL_KAFKA_BROKER)
+    dataKafkaProps.setProperty("group.id", DATA_GROUP)
     // always read the Kafka topic from the current location
-    dataKafkaProps.setProperty("auto.offset.reset", "earliest")
+    dataKafkaProps.setProperty("auto.offset.reset", "latest")
 
     // Model
     val modelKafkaProps = new Properties
-    modelKafkaProps.setProperty("zookeeper.connect", ModelServingConfiguration.LOCAL_ZOOKEEPER_HOST)
-    modelKafkaProps.setProperty("bootstrap.servers", ModelServingConfiguration.LOCAL_KAFKA_BROKER)
-    modelKafkaProps.setProperty("group.id", ModelServingConfiguration.MODELS_GROUP)
+    modelKafkaProps.setProperty("zookeeper.connect", LOCAL_ZOOKEEPER_HOST)
+    modelKafkaProps.setProperty("bootstrap.servers", LOCAL_KAFKA_BROKER)
+    modelKafkaProps.setProperty("group.id", MODELS_GROUP)
     // always read the Kafka topic from the current location
-    modelKafkaProps.setProperty("auto.offset.reset", "latest")
+    modelKafkaProps.setProperty("auto.offset.reset", "earliest")
 
     // create a Kafka consumers
     // Data
     val dataConsumer = new FlinkKafkaConsumer010[Array[Byte]](
-      ModelServingConfiguration.DATA_TOPIC,
+      DATA_TOPIC,
       new ByteArraySchema,
       dataKafkaProps
     )
 
     // Model
     val modelConsumer = new FlinkKafkaConsumer010[Array[Byte]](
-      ModelServingConfiguration.MODELS_TOPIC,
+      MODELS_TOPIC,
       new ByteArraySchema,
       modelKafkaProps
     )

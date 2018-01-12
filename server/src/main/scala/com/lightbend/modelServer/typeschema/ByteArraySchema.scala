@@ -23,7 +23,7 @@ package com.lightbend.modelServer.typeschema
   */
 import org.apache.flink.api.common.typeinfo.TypeInformation
 import org.apache.flink.api.java.typeutils.TypeExtractor
-import org.apache.flink.streaming.util.serialization.{DeserializationSchema, SerializationSchema}
+import org.apache.flink.api.common.serialization.{DeserializationSchema, SerializationSchema}
 
 class ByteArraySchema extends DeserializationSchema[Array[Byte]] with SerializationSchema[Array[Byte]] {
 
@@ -36,6 +36,5 @@ class ByteArraySchema extends DeserializationSchema[Array[Byte]] with Serializat
   override def serialize(element: Array[Byte]): Array[Byte] = element
 
   override def getProducedType: TypeInformation[Array[Byte]] =
-    //PrimitiveArrayTypeInfo.BYTE_PRIMITIVE_ARRAY_TYPE_INFO
     TypeExtractor.getForClass(classOf[Array[Byte]])
 }

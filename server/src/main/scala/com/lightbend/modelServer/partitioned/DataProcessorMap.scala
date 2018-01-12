@@ -24,12 +24,9 @@ package com.lightbend.modelServer.partitioned
   * Main class processing data using models
   *
   */
-import com.lightbend.model.modeldescriptor.ModelDescriptor
 import com.lightbend.model.winerecord.WineRecord
 import com.lightbend.modelServer.ModelToServe
 import com.lightbend.modelServer.model.Model
-import com.lightbend.modelServer.model.PMML.PMMLModel
-import com.lightbend.modelServer.model.tensorflow.TensorFlowModel
 import com.lightbend.modelServer.typeschema.ModelTypeSerializer
 import org.apache.flink.api.common.state.{ListState, ListStateDescriptor}
 import org.apache.flink.runtime.state.{FunctionInitializationContext, FunctionSnapshotContext}
@@ -68,8 +65,6 @@ class DataProcessorMap extends RichCoFlatMapFunction[WineRecord, ModelToServe, D
   }
 
   override def flatMap2(model: ModelToServe, out: Collector[Double]): Unit = {
-
-    import DataProcessorMap._
 
     println(s"New model - $model")
     newModel = ModelToServe.toModel(model)

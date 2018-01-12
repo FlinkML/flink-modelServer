@@ -36,7 +36,7 @@ object ModelStateQuery {
 
   def main(args: Array[String]) {
 
-    val jobId = JobID.fromHexString("94e9528e820fd08596805f650c134198")
+    val jobId = JobID.fromHexString("7981ad2fea64284d2b51c1fb6e8dc365")
     val types = Array("wine")
 
     val client = new QueryableStateClient("127.0.0.1", 9069)
