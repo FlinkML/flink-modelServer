@@ -115,7 +115,7 @@ public class ModelServingFlatJob {
         dataKafkaProps.setProperty("bootstrap.servers", ModelServingConfiguration.LOCAL_KAFKA_BROKER);
         dataKafkaProps.setProperty("group.id", ModelServingConfiguration.DATA_GROUP);
         // always read the Kafka topic from the current location
-        dataKafkaProps.setProperty("auto.offset.reset", "latest");
+        dataKafkaProps.setProperty("auto.offset.reset", "earliest");
 
         // Model
         Properties modelKafkaProps = new Properties();

@@ -120,7 +120,7 @@ object ModelServingFlatJob {
     modelKafkaProps.setProperty("bootstrap.servers", ModelServingConfiguration.LOCAL_KAFKA_BROKER)
     modelKafkaProps.setProperty("group.id", ModelServingConfiguration.MODELS_GROUP)
     // always read the Kafka topic from the current location
-    modelKafkaProps.setProperty("auto.offset.reset", "latest")
+    modelKafkaProps.setProperty("auto.offset.reset", "earliest")
 
     // create a Kafka consumers
     // Data

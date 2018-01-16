@@ -25,73 +25,87 @@ package com.lightbend.modelServer.partitioned
   *
   */
 import com.lightbend.model.winerecord.WineRecord
-import com.lightbend.modelServer.ModelToServe
+import com.lightbend.modelServer.{ModelToServe, ModelWithType}
 import com.lightbend.modelServer.model.Model
-import com.lightbend.modelServer.typeschema.ModelTypeSerializer
-import org.apache.flink.api.common.state.{ListState, ListStateDescriptor}
+import com.lightbend.modelServer.typeschema.ModelWithTypeSerializer
+import org.apache.flink.api.common.state.{ListState, ListStateDescriptor, MapState}
 import org.apache.flink.runtime.state.{FunctionInitializationContext, FunctionSnapshotContext}
 import org.apache.flink.streaming.api.checkpoint.CheckpointedFunction
 import org.apache.flink.streaming.api.functions.co.RichCoFlatMapFunction
 import org.apache.flink.util.Collector
 
+import scala.collection.JavaConverters._
+import scala.collection.mutable.{Map, ListBuffer}
+
 object DataProcessorMap{
   def apply() : DataProcessorMap = new DataProcessorMap()
 }
 
-class DataProcessorMap extends RichCoFlatMapFunction[WineRecord, ModelToServe, Double] with CheckpointedFunction{
+class DataProcessorMap extends RichCoFlatMapFunction[WineRecord, ModelToServe, Double] with CheckpointedFunction {
 
-  var currentModel : Option[Model] = None
-  var newModel : Option[Model] = None
-  @transient private var checkpointedState: ListState[Option[Model]] = null
+  private var currentModels = Map[String, Model]()
+  private var newModels = Map[String, Model]()
+
+  @transient private var checkpointedState: ListState[ModelWithType] = _
 
   override def snapshotState(context: FunctionSnapshotContext): Unit = {
     checkpointedState.clear()
-    checkpointedState.add(currentModel)
-    checkpointedState.add(newModel)
+    currentModels.foreach(entry => checkpointedState.add(ModelWithType(true, entry._1, Some(entry._2))))
+    newModels.foreach(entry => checkpointedState.add(ModelWithType(false, entry._1, Some(entry._2))))
   }
 
   override def initializeState(context: FunctionInitializationContext): Unit = {
-    val descriptor = new ListStateDescriptor[Option[Model]] (
+    val checkPointDescriptor = new ListStateDescriptor[ModelWithType] (
         "modelState",
-        new ModelTypeSerializer)
-
-    checkpointedState = context.getOperatorStateStore.getListState (descriptor)
+        new ModelWithTypeSerializer)
+    checkpointedState = context.getOperatorStateStore.getListState (checkPointDescriptor)
 
     if (context.isRestored) {
-      val iterator = checkpointedState.get().iterator()
-      currentModel = iterator.next()
-      newModel = iterator.next()
+      val nm = new ListBuffer[(String, Model)]()
+      val cm = new ListBuffer[(String, Model)]()
+      checkpointedState.get().iterator().asScala.foreach(modelWithType => {
+        modelWithType.model match {
+          case Some(model) =>
+            modelWithType.isCurrent match {
+              case true => cm += (modelWithType.dataType -> model)
+              case _ => nm += (modelWithType.dataType -> model)
+            }
+          case _ =>
+        }
+      })
+      currentModels = Map(cm: _*)
+      newModels = Map(nm: _*)
     }
   }
 
   override def flatMap2(model: ModelToServe, out: Collector[Double]): Unit = {
 
     println(s"New model - $model")
-    newModel = ModelToServe.toModel(model)
+    ModelToServe.toModel(model) match {
+      case Some(md) => newModels += (model.dataType -> md)
+      case _ =>
+    }
   }
 
   override def flatMap1(record: WineRecord, out: Collector[Double]): Unit = {
     // See if we need to update
-    newModel match {
-      case Some(model) => {
-        // close current model first
-        currentModel match {
-          case Some(m) => m.cleanup();
+    newModels.contains(record.dataType) match {
+      case true =>
+        currentModels.contains(record.dataType) match {
+          case true => currentModels(record.dataType).cleanup()
           case _ =>
         }
-        // Update model
-        currentModel = Some(model)
-        newModel = None
-      }
+        currentModels += (record.dataType -> newModels(record.dataType))
+        newModels -= record.dataType
       case _ =>
     }
-    currentModel match {
-      case Some(model) => {
+    // actually process
+    currentModels.contains(record.dataType) match {
+      case true =>
         val start = System.currentTimeMillis()
-        val quality = model.score(record.asInstanceOf[AnyVal]).asInstanceOf[Double]
+        val quality = currentModels(record.dataType).score(record.asInstanceOf[AnyVal]).asInstanceOf[Double]
         val duration = System.currentTimeMillis() - start
         println(s"Subtask ${this.getRuntimeContext.getIndexOfThisSubtask} calculated quality - $quality calculated in $duration ms")
-      }
       case _ => println("No model available - skipping")
     }
   }

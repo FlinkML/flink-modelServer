@@ -71,3 +71,5 @@ case class ModelToServeStats(name: String = "", description: String = "",
     this
   }
 }
+
+case class ModelWithType(isCurrent : Boolean, dataType: String, model: Option[Model])
