@@ -74,7 +74,7 @@ public class DataProcessorMap extends RichCoFlatMapFunction<Winerecord.WineRecor
 
         // See if we need to update
         if(newModels.containsKey(record.getDataType())){
-            if(currentModels.containsKey(record.getDataType()));
+            if(currentModels.containsKey(record.getDataType()))
                 currentModels.get(record.getDataType()).cleanup();
             currentModels.put(record.getDataType(), newModels.get(record.getDataType()));
             newModels.remove(record.getDataType());
