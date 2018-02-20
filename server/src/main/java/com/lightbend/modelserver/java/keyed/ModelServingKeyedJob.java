@@ -166,7 +166,8 @@ public class ModelServingKeyedJob {
         // Merge streams
         data
                 .connect(models)
-                .process(new DataProcessorKeyed());
+                .process(new DataProcessorKeyed())
+                .map(result -> {System.out.println("Model serving result " + result); return result;});
     }
 
     public static class ModelDataConverter implements FlatMapFunction<byte[], ModelToServe> {

@@ -152,5 +152,6 @@ object ModelServingFlatJob {
     data
       .connect(models)
       .flatMap(DataProcessorMap())
+      .map(result => println(s"Model serving result $result"))
   }
 }

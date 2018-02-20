@@ -95,19 +95,13 @@ class DataProcessorKeyed extends CoProcessFunction[WineRecord, ModelToServe, Dou
   override def processElement1(record: WineRecord, ctx: CoProcessFunction[WineRecord, ModelToServe, Double]#Context, out: Collector[Double]): Unit = {
 
     // See if we have update for the model
-    newModel match {
-      case Some(model) => {
-        // Clean up current model
-        currentModel match {
-          case Some(m) => m.cleanup()
-          case _ =>
-        }
-        // Update model
-        currentModel = newModel
-        modelState.update(newModelState.value())
-        newModel = None
-      }
-      case _ =>
+    newModel.foreach { model =>
+      // close current model first
+      currentModel.foreach(_.cleanup())
+      // Update model
+      currentModel = newModel
+      modelState.update(newModelState.value())
+      newModel = None
     }
 
     // Actually process data
@@ -118,6 +112,7 @@ class DataProcessorKeyed extends CoProcessFunction[WineRecord, ModelToServe, Dou
         val duration = System.currentTimeMillis() - start
         modelState.update(modelState.value().incrementUsage(duration))
         println(s"Calculated quality - $quality calculated in $duration ms")
+        out.collect(quality);
       }
       case _ => println("No model available - skipping")
     }

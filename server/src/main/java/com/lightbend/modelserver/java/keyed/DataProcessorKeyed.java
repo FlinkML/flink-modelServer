@@ -99,6 +99,7 @@ public class DataProcessorKeyed extends CoProcessFunction<Winerecord.WineRecord,
             long duration = System.currentTimeMillis() - start;
             modelState.update(modelState.value().incrementUsage(duration));
             System.out.println("Calculated quality - " + quality + " calculated in " + duration + " ms");
+            out.collect(quality);
         }
         else
             System.out.println("No model available - skipping");

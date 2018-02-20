@@ -106,6 +106,7 @@ class DataProcessorMap extends RichCoFlatMapFunction[WineRecord, ModelToServe, D
         val quality = currentModels(record.dataType).score(record.asInstanceOf[AnyVal]).asInstanceOf[Double]
         val duration = System.currentTimeMillis() - start
         println(s"Subtask ${this.getRuntimeContext.getIndexOfThisSubtask} calculated quality - $quality calculated in $duration ms")
+        out.collect(quality)
       case _ => println("No model available - skipping")
     }
   }

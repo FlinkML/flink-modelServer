@@ -170,5 +170,6 @@ object ModelServingKeyedJob {
     data
       .connect(models)
       .process(DataProcessorKeyed())
+      .map(result => println(s"Model serving result $result"))
   }
 }

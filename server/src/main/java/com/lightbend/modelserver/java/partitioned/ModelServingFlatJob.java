@@ -152,7 +152,8 @@ public class ModelServingFlatJob {
         // Merge streams
         data
                 .connect(models)
-                .flatMap(new DataProcessorMap());
+                .flatMap(new DataProcessorMap())
+                .map(result -> {System.out.println("Model serving result " + result); return result;});
     }
 
     public static class ModelDataConverter implements FlatMapFunction<byte[], ModelToServe> {

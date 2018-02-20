@@ -84,6 +84,7 @@ public class DataProcessorMap extends RichCoFlatMapFunction<Winerecord.WineRecor
             double quality = (double) currentModels.get(record.getDataType()).score(record);
             long duration = System.currentTimeMillis() - start;
             System.out.println("Calculated quality - " + quality + " calculated in " + duration + " ms");
+            out.collect(quality);
         }
         else
             System.out.println("No model available - skipping");
