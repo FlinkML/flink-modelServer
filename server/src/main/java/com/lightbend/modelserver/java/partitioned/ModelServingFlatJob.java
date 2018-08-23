@@ -81,7 +81,6 @@ public class ModelServingFlatJob {
             env.setParallelism(parallelism);
             // Build Graph
             buildGraph(env);
-            env.execute();
             JobGraph jobGraph = env.getStreamGraph().getJobGraph();
             // Submit to the server and wait for completion
             flinkCluster.submitJobAndWait(jobGraph, false);

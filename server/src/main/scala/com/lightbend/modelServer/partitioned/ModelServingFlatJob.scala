@@ -85,7 +85,6 @@ object ModelServingFlatJob {
       val env = StreamExecutionEnvironment.createRemoteEnvironment("localhost", port, parallelism)
       // Build Graph
       buildGraph(env)
-      env.execute()
       val jobGraph = env.getStreamGraph.getJobGraph
       // Submit to the server and wait for completion
       flinkCluster.submitJobAndWait(jobGraph, false)

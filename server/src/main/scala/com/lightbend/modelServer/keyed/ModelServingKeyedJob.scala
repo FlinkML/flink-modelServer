@@ -69,8 +69,7 @@ object ModelServingKeyedJob {
 
     val config = new Configuration()
     config.setInteger(JobManagerOptions.PORT, port)
-    config.setString(JobManagerOptions.ADDRESS, "localhost");
-    config.setInteger(ConfigConstants.TASK_MANAGER_NUM_TASK_SLOTS, parallelism)
+    config.setString(JobManagerOptions.ADDRESS, "localhost")
 
     // In a non MiniCluster setup queryable state is enabled by default.
     config.setString(QueryableStateOptions.PROXY_PORT_RANGE, "9069")
@@ -89,16 +88,13 @@ object ModelServingKeyedJob {
         config,
         Executors.directExecutor(),
         HighAvailabilityServicesUtils.AddressResolution.TRY_ADDRESS_RESOLUTION),
-      false);
+      false)
     try {
       // Start server and create environment
-      flinkCluster.start(true);
-
-      val env = StreamExecutionEnvironment.createRemoteEnvironment("localhost", port)
-      env.setParallelism(parallelism)
-      // Build Graph
+      flinkCluster.start(true)
+      val env = StreamExecutionEnvironment.createRemoteEnvironment("localhost", flinkCluster.getLeaderRPCPort)
+       // Build Graph
       buildGraph(env)
-      env.execute()
       val jobGraph = env.getStreamGraph.getJobGraph
       // Submit to the server and wait for completion
       flinkCluster.submitJobAndWait(jobGraph, false)
