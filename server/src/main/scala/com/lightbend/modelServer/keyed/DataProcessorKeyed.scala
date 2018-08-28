@@ -42,70 +42,72 @@ object DataProcessorKeyed {
   def apply() = new DataProcessorKeyed
 }
 
-class DataProcessorKeyed extends CoProcessFunction[WineRecord, ModelToServe, Double] with CheckpointedFunction {
+class DataProcessorKeyed extends CoProcessFunction[WineRecord, ModelToServe, Double]{
 
-  // The managed keyed state see https://ci.apache.org/projects/flink/flink-docs-release-1.4/dev/stream/state.html
+  // In Flink class instance is created not for key, but rater key groups
+  // https://ci.apache.org/projects/flink/flink-docs-release-1.6/dev/stream/state/state.html#keyed-state-and-operator-state
+  // As a result, any key specific sate data has to be in the key specific state
+
   var modelState: ValueState[ModelToServeStats] = _
   var newModelState: ValueState[ModelToServeStats] = _
 
-  var currentModel : Option[Model] = None
-  var newModel : Option[Model] = None
+  var currentModel : ValueState[Option[Model]] = _
+  var newModel : ValueState[Option[Model]] = _
 
   @transient private var checkpointedState: ListState[Option[Model]] = null
 
   override def open(parameters: Configuration): Unit = {
-    val modelDesc = new ValueStateDescriptor[ModelToServeStats](
-      "currentModel",   // state name
-      createTypeInformation[ModelToServeStats]) // type information
-    modelDesc.setQueryable("currentModel")
-    modelState = getRuntimeContext.getState(modelDesc)
-    val newModelDesc = new ValueStateDescriptor[ModelToServeStats](
-      "newModel",         // state name
-      createTypeInformation[ModelToServeStats])  // type information
-    newModelState = getRuntimeContext.getState(newModelDesc)
+
+    val modelStateDesc = new ValueStateDescriptor[ModelToServeStats](
+      "currentModelState",                  // state name
+      createTypeInformation[ModelToServeStats])     // type information
+    modelStateDesc.setQueryable("currentModelState")     // Expose it for queryable state
+    modelState = getRuntimeContext.getState(modelStateDesc)
+    val newModelStateDesc = new ValueStateDescriptor[ModelToServeStats](
+      "newModelState",                      // state name
+      createTypeInformation[ModelToServeStats])     // type information
+    newModelState = getRuntimeContext.getState(newModelStateDesc)
+    val modelDesc = new ValueStateDescriptor[Option[Model]](
+      "currentModel",                               // state name
+      new ModelTypeSerializer)                      // type information
+    currentModel = getRuntimeContext.getState(modelDesc)
+    val newModelDesc = new ValueStateDescriptor[Option[Model]](
+      "newModel",                                   // state name
+      new ModelTypeSerializer)                       // type information
+    newModel = getRuntimeContext.getState(newModelDesc)
   }
 
-  override def snapshotState(context: FunctionSnapshotContext): Unit = {
-    checkpointedState.clear()
-    checkpointedState.add(currentModel)
-    checkpointedState.add(newModel)
-  }
-
-  override def initializeState(context: FunctionInitializationContext): Unit = {
-    val descriptor = new ListStateDescriptor[Option[Model]] (
-      "modelState",
-      new ModelTypeSerializer)
-
-    checkpointedState = context.getOperatorStateStore.getListState (descriptor)
-
-    if (context.isRestored) {
-      val iterator = checkpointedState.get().iterator()
-      currentModel = iterator.next()
-      newModel = iterator.next()
-    }
-  }
 
   override def processElement2(model: ModelToServe, ctx: CoProcessFunction[WineRecord, ModelToServe, Double]#Context, out: Collector[Double]): Unit = {
 
+    if(newModel.value == null) newModel.update(None)
+    if(currentModel.value == null) currentModel.update(None)
+
     println(s"New model - $model")
-    newModelState.update(new ModelToServeStats(model))
-    newModel = ModelToServe.toModel(model)
+    ModelToServe.toModel(model) match {
+      case Some(md) =>
+        newModel.update (Some(md))
+        newModelState.update (new ModelToServeStats (model))
+      case _ =>
+    }
   }
 
   override def processElement1(record: WineRecord, ctx: CoProcessFunction[WineRecord, ModelToServe, Double]#Context, out: Collector[Double]): Unit = {
 
+    if(newModel.value == null) newModel.update(None)
+    if(currentModel.value == null) currentModel.update(None)
     // See if we have update for the model
-    newModel.foreach { model =>
+    newModel.value.foreach { model =>
       // close current model first
-      currentModel.foreach(_.cleanup())
+      currentModel.value.foreach(_.cleanup())
       // Update model
-      currentModel = newModel
+      currentModel.update(newModel.value)
       modelState.update(newModelState.value())
-      newModel = None
+      newModel.update(None)
     }
 
     // Actually process data
-    currentModel match {
+    currentModel.value match {
       case Some(model) => {
         val start = System.currentTimeMillis()
         val quality = model.score(record.asInstanceOf[AnyVal]).asInstanceOf[Double]
