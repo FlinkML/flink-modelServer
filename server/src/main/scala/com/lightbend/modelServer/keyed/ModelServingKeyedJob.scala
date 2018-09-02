@@ -70,6 +70,7 @@ object ModelServingKeyedJob {
     val config = new Configuration()
     config.setInteger(JobManagerOptions.PORT, port)
     config.setString(JobManagerOptions.ADDRESS, "localhost")
+    config.setInteger(TaskManagerOptions.NUM_TASK_SLOTS, parallelism)
 
     // In a non MiniCluster setup queryable state is enabled by default.
     config.setString(QueryableStateOptions.PROXY_PORT_RANGE, "9069")

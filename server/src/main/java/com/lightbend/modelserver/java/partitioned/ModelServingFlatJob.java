@@ -26,9 +26,9 @@ import com.lightbend.modelserver.java.keyed.ModelServingKeyedJob;
 import com.lightbend.modelserver.java.typeschema.ByteArraySchema;
 import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.api.common.typeinfo.PrimitiveArrayTypeInfo;
-import org.apache.flink.configuration.ConfigConstants;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.configuration.JobManagerOptions;
+import org.apache.flink.configuration.TaskManagerOptions;
 import org.apache.flink.runtime.concurrent.Executors;
 import org.apache.flink.runtime.highavailability.HighAvailabilityServicesUtils;
 import org.apache.flink.runtime.jobgraph.JobGraph;
@@ -62,7 +62,7 @@ public class ModelServingFlatJob {
         Configuration config = new Configuration();
         config.setInteger(JobManagerOptions.PORT, port);
         config.setString(JobManagerOptions.ADDRESS, "localhost");
-        config.setInteger(ConfigConstants.TASK_MANAGER_NUM_TASK_SLOTS, parallelism);
+        config.setInteger(TaskManagerOptions.NUM_TASK_SLOTS, parallelism);
 
         try {
 

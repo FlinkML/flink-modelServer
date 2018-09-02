@@ -25,7 +25,7 @@ import com.lightbend.model.winerecord.WineRecord
 import com.lightbend.modelServer.typeschema.ByteArraySchema
 import com.lightbend.modelServer.{BadDataHandler, DataRecord, ModelToServe}
 import org.apache.flink.api.scala._
-import org.apache.flink.configuration.{ConfigConstants, Configuration, JobManagerOptions}
+import org.apache.flink.configuration.{ConfigConstants, Configuration, JobManagerOptions, TaskManagerOptions}
 import org.apache.flink.runtime.concurrent.Executors
 import org.apache.flink.runtime.highavailability.HighAvailabilityServicesUtils
 import org.apache.flink.runtime.minicluster.LocalFlinkMiniCluster
@@ -69,7 +69,7 @@ object ModelServingFlatJob {
     val config = new Configuration()
     config.setInteger(JobManagerOptions.PORT, port)
     config.setString(JobManagerOptions.ADDRESS, "localhost");
-    config.setInteger(ConfigConstants.TASK_MANAGER_NUM_TASK_SLOTS, parallelism)
+    config.setInteger(TaskManagerOptions.NUM_TASK_SLOTS, parallelism)
 
     // Create a local Flink server
     val flinkCluster = new LocalFlinkMiniCluster(

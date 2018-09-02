@@ -26,10 +26,7 @@ import com.lightbend.modelserver.java.typeschema.ByteArraySchema;
 import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.api.common.typeinfo.PrimitiveArrayTypeInfo;
 import org.apache.flink.api.java.functions.KeySelector;
-import org.apache.flink.configuration.ConfigConstants;
-import org.apache.flink.configuration.Configuration;
-import org.apache.flink.configuration.JobManagerOptions;
-import org.apache.flink.configuration.QueryableStateOptions;
+import org.apache.flink.configuration.*;
 import org.apache.flink.runtime.concurrent.Executors;
 import org.apache.flink.runtime.highavailability.HighAvailabilityServicesUtils;
 import org.apache.flink.runtime.jobgraph.JobGraph;
@@ -62,7 +59,7 @@ public class ModelServingKeyedJob {
         Configuration config = new Configuration();
         config.setInteger(JobManagerOptions.PORT, port);
         config.setString(JobManagerOptions.ADDRESS, "localhost");
-        config.setInteger(ConfigConstants.TASK_MANAGER_NUM_TASK_SLOTS, parallelism);
+        config.setInteger(TaskManagerOptions.NUM_TASK_SLOTS, parallelism);
 
         // In a non MiniCluster setup queryable state is enabled by default.
         config.setString(QueryableStateOptions.PROXY_PORT_RANGE, "9069");

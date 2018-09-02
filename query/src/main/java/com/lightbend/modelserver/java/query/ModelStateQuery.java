@@ -38,7 +38,7 @@ public class ModelStateQuery{
 
     public static void main(String[] args) throws Exception {
 
-        JobID jobId = JobID.fromHexString("8eee226f444743df9b5591b0df53aea7");
+        JobID jobId = JobID.fromHexString("b5892770e04f046be619b480352ce4d7");
         List<String> types = Arrays.asList("wine");
 
         QueryableStateClient client = new QueryableStateClient("127.0.0.1", 9069);
@@ -56,7 +56,7 @@ public class ModelStateQuery{
         while(true) {
             for (String key : types) {
                 CompletableFuture<ValueState<ModelToServeStats>> future =
-                        client.getKvState(jobId, "currentModel", key, keyType, descriptor);
+                        client.getKvState(jobId, "currentModelState", key, keyType, descriptor);
                 future.thenAccept(response -> {
                     try {
                         ModelToServeStats stats = response.value();
