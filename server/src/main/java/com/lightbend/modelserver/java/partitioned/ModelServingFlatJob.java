@@ -22,9 +22,7 @@ import com.lightbend.kafka.configuration.java.ModelServingConfiguration;
 import com.lightbend.model.DataConverter;
 import com.lightbend.model.ModelToServe;
 import com.lightbend.model.Winerecord;
-import com.lightbend.modelserver.java.keyed.ModelServingKeyedJob;
 import com.lightbend.modelserver.java.typeschema.ByteArraySchema;
-import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.api.common.typeinfo.PrimitiveArrayTypeInfo;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.configuration.JobManagerOptions;
@@ -36,7 +34,7 @@ import org.apache.flink.runtime.minicluster.LocalFlinkMiniCluster;
 import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer010;
+import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer011;
 import org.apache.flink.util.Collector;
 
 import java.util.Optional;
@@ -126,13 +124,13 @@ public class ModelServingFlatJob {
 
         // create a Kafka consumers
         // Data
-        FlinkKafkaConsumer010<byte[]> dataConsumer = new FlinkKafkaConsumer010<>(
+        FlinkKafkaConsumer011<byte[]> dataConsumer = new FlinkKafkaConsumer011<>(
                 ModelServingConfiguration.DATA_TOPIC,
                 new ByteArraySchema(),
                 dataKafkaProps);
 
         // Model
-        FlinkKafkaConsumer010<byte[]> modelConsumer = new FlinkKafkaConsumer010<>(
+        FlinkKafkaConsumer011<byte[]> modelConsumer = new FlinkKafkaConsumer011<>(
                 ModelServingConfiguration.MODELS_TOPIC,
                 new ByteArraySchema(),
                 modelKafkaProps);
@@ -143,37 +141,28 @@ public class ModelServingFlatJob {
 
         // Read data from streams
         DataStream<ModelToServe> models = modelsStream
-                .flatMap(new ModelServingKeyedJob.ModelDataConverter())
+                .flatMap((byte[] value, Collector<ModelToServe> out) -> {
+                    Optional<ModelToServe> model = DataConverter.convertModel(value);
+                    if (model.isPresent())
+                        out.collect(model.get());
+                    else
+                        System.out.println("Failed to convert model input");
+
+                }).returns(ModelToServe.class)
                 .broadcast();
         DataStream<Winerecord.WineRecord> data = dataStream
-                .flatMap(new ModelServingKeyedJob.DataDataConverter());
+                .flatMap((byte[] value, Collector<Winerecord.WineRecord> out) -> {
+                    Optional<Winerecord.WineRecord> record = DataConverter.convertData(value);
+                    if (record.isPresent())
+                        out.collect(record.get());
+                    else
+                        System.out.println("Failed to convert data input");
+                }).returns(Winerecord.WineRecord.class);
 
         // Merge streams
         data
                 .connect(models)
                 .flatMap(new DataProcessorMap())
                 .map(result -> {System.out.println("Model serving result " + result); return result;});
-    }
-
-    public static class ModelDataConverter implements FlatMapFunction<byte[], ModelToServe> {
-        @Override
-        public void flatMap(byte[] value, Collector<ModelToServe> out) throws Exception {
-            Optional<ModelToServe> model = DataConverter.convertModel(value);
-            if (model.isPresent())
-                out.collect(model.get());
-            else
-                System.out.println("Failed to convert model input");
-        }
-    }
-
-    public static class DataDataConverter implements FlatMapFunction<byte[], Winerecord.WineRecord> {
-        @Override
-        public void flatMap(byte[] value, Collector<Winerecord.WineRecord> out) throws Exception {
-            Optional<Winerecord.WineRecord> record = DataConverter.convertData(value);
-            if (record.isPresent())
-                out.collect(record.get());
-            else
-                System.out.println("Failed to convert data input");
-        }
     }
 }
