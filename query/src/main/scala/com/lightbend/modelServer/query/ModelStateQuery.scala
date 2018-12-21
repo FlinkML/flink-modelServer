@@ -19,7 +19,7 @@
 package com.lightbend.modelServer.query
 
 import com.lightbend.modelServer.ModelToServeStats
-import org.apache.flink.api.common.state.{ValueState, ValueStateDescriptor}
+import org.apache.flink.api.common.state.ValueStateDescriptor
 import org.apache.flink.api.common.{ExecutionConfig, JobID}
 import org.apache.flink.api.common.typeinfo.BasicTypeInfo
 import org.apache.flink.api.scala.createTypeInformation
@@ -36,7 +36,7 @@ object ModelStateQuery {
 
   def main(args: Array[String]) {
 
-    val jobId = JobID.fromHexString("7e73aa32facc36def70d1b81ac454fb0")
+    val jobId = JobID.fromHexString("7a380986efe2d415bf77cb09ef2cbb1b")
     val types = Array("wine")
 
     val client = new QueryableStateClient("127.0.0.1", 9069)
@@ -52,7 +52,7 @@ object ModelStateQuery {
     while(true) {
       for (key <- types) {
         try {
-          val future = client.getKvState(jobId, "currentModel", key, keyType, descriptor)
+          val future = client.getKvState(jobId, "currentModelState", key, keyType, descriptor)
           val stats = future.join().value()
           println(s" ${stats.name} | ${stats.description} | ${new DateTime(stats.since).toString("yyyy/MM/dd HH:MM:SS")} | ${stats.duration/stats.usage} |" +
             s"  ${stats.min} | ${stats.max} |")

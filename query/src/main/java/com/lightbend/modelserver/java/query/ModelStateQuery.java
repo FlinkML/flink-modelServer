@@ -38,7 +38,7 @@ public class ModelStateQuery{
 
     public static void main(String[] args) throws Exception {
 
-        JobID jobId = JobID.fromHexString("b5892770e04f046be619b480352ce4d7");
+        JobID jobId = JobID.fromHexString("48aa41f575e99995ca74132de7331ad0");
         List<String> types = Arrays.asList("wine");
 
         QueryableStateClient client = new QueryableStateClient("127.0.0.1", 9069);

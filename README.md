@@ -7,6 +7,8 @@ The basic idea behind this implementation is fairly straightforward - there are 
 
 -**Model Stream** - Kafka stream delivering models as protobuf buffer (example, modeldescriptor.proto)
 
+THe implementation is based on [Dynamically controlled Streams](https://www.data-artisans.com/blog/bettercloud-dynamic-alerting-apache-flink)
+
 The project contains 2 implementations of model server:
 
 -**ModelServingKeyedJob** - This little application is based on a RichCoProcessFunction which works on a keyed streams. It is applicable
@@ -24,11 +26,11 @@ The project contains 2 implementations of model server:
    
 The project also contains 3 additional supporting applications
    
--**DataProvider** - Small application reading data from winequality_red.csv and continiously submitting it to a Kafka topic,
-thus emulating continious data Stream
-
--**ModelProvider** - Small appliacation reading PMML mode definitions (files with .pmml extension) and continiously
+-**Clientr** - Small application reading data from winequality_red.csv and continiously submitting it to a Kafka topic,
+thus emulating continious data Stream and reading PMML mode definitions (files with .pmml extension) and continiously
 publishing them to the model stream
    
 -**ModelStateQuery** - Small application demonstrating external access to a Flink queryable data, containing
 current model state. It works only for ModelServingKeyedJob (queryable state is supported only for keyed stream)
+
+-**Wine Serving** - An application leveraging underlying machinery to build model serving application.
