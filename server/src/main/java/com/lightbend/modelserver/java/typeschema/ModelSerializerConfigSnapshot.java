@@ -19,22 +19,77 @@
 package com.lightbend.modelserver.java.typeschema;
 
 import com.lightbend.model.Model;
-import org.apache.flink.api.common.typeutils.GenericTypeSerializerConfigSnapshot;
-import org.apache.flink.api.common.typeutils.TypeSerializerConfigSnapshot;
+import org.apache.flink.api.common.typeutils.SimpleTypeSerializerSnapshot;
+import org.apache.flink.api.common.typeutils.TypeSerializer;
+import org.apache.flink.api.common.typeutils.TypeSerializerSchemaCompatibility;
+import org.apache.flink.core.memory.DataInputView;
+import org.apache.flink.core.memory.DataOutputView;
+import org.apache.flink.util.InstantiationUtil;
 
-public class ModelSerializerConfigSnapshot extends TypeSerializerConfigSnapshot {
+import java.io.IOException;
 
-    private static final int VERSION = 1;
-    private static final int HASHCODE = 42;
+public class ModelSerializerConfigSnapshot extends SimpleTypeSerializerSnapshot<Model> {
 
-    @Override public boolean equals(Object obj) {
-        if (obj == this) return true;
-        if (obj == null) return false;
-        return (obj.getClass() == getClass()) &&
-                Model.class == ((GenericTypeSerializerConfigSnapshot<?>)obj).getTypeClass();
+    private static final int VERSION = 2;
+
+     private Class<ModelTypeSerializer> serializerClass = ModelTypeSerializer.class;
+
+
+    @Override
+    public int getCurrentVersion() {
+        return VERSION;
     }
 
-    @Override public int hashCode() { return HASHCODE; }
+    @Override
+    public void writeSnapshot(DataOutputView out) throws IOException {
+        out.writeUTF(serializerClass.getName());
+    }
 
-    @Override public int getVersion() { return VERSION; }
+    @Override
+    public void readSnapshot(int readVersion, DataInputView in, ClassLoader classLoader) throws IOException {
+        switch (readVersion) {
+            case 2:
+                read(in, classLoader);
+                break;
+            default:
+                throw new IOException("Unrecognized version: " + readVersion);
+        }
+    }
+
+    @Override
+    public TypeSerializer<Model> restoreSerializer() {
+        return InstantiationUtil.instantiate(serializerClass);
+    }
+
+    @Override
+    public TypeSerializerSchemaCompatibility<Model> resolveSchemaCompatibility(TypeSerializer<Model> newSerializer) {
+        return newSerializer.getClass() == serializerClass ?
+                TypeSerializerSchemaCompatibility.compatibleAsIs() :
+                TypeSerializerSchemaCompatibility.incompatible();
+    }
+
+    private void read(DataInputView in, ClassLoader classLoader) throws IOException {
+        final String className = in.readUTF();
+        this.serializerClass = cast(resolveClassName(className, classLoader, false));
+    }
+
+    private static Class<?> resolveClassName(String className, ClassLoader cl, boolean allowCanonicalName) throws IOException {
+        try {
+            return Class.forName(className, false, cl);
+        }
+        catch (Throwable e) {
+            throw new IOException(
+                    "Failed to read SimpleTypeSerializerSnapshot: Serializer class not found: " + className, e);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static  Class<ModelTypeSerializer> cast(Class<?> clazz) throws IOException {
+        if (!ModelTypeSerializer.class.isAssignableFrom(clazz)) {
+            throw new IOException("Failed to read SimpleTypeSerializerSnapshot. " +
+                    "Serializer class name leads to a class that is not a TypeSerializer: " + clazz.getName());
+        }
+
+        return (Class<ModelTypeSerializer>) clazz;
+    }
 }

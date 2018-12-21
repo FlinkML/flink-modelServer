@@ -16,18 +16,22 @@
  *
  */
 
-package com.lightbend.modelServer
+package com.lightbend.wineserving.server
 
-import com.lightbend.model.winerecord.WineRecord
+import org.apache.flink.api.common.functions.FlatMapFunction
+import org.apache.flink.util.Collector
 
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
-/**
-  * Created by boris on 5/8/17.
-  */
-object DataRecord {
+object BadDataHandler {
+  def apply[T] = new BadDataHandler[T]
+}
 
-  def fromByteArray(message: Array[Byte]): Try[WineRecord] = Try {
-    WineRecord.parseFrom(message)
+class BadDataHandler[T] extends FlatMapFunction[Try[T], T] {
+  override def flatMap(t: Try[T], out: Collector[T]): Unit = {
+    t match {
+      case Success(t) => out.collect(t)
+      case Failure(e) => println(s"BAD DATA: ${e.getMessage}")
+    }
   }
 }

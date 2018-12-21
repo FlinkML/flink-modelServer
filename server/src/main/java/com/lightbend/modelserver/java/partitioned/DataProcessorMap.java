@@ -33,7 +33,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
 
-public class DataProcessorMap extends RichCoFlatMapFunction<Winerecord.WineRecord, ModelToServe, Double> implements CheckpointedFunction {
+public class DataProcessorMap extends RichCoFlatMapFunction<DataToServe, ModelToServe, ServingResult> implements CheckpointedFunction {
 
     Map<String, Model> currentModels = new HashMap<>();
     Map<String, Model> newModels = new HashMap<>();
@@ -70,27 +70,24 @@ public class DataProcessorMap extends RichCoFlatMapFunction<Winerecord.WineRecor
         }
     }
 
-    @Override public void flatMap1(Winerecord.WineRecord record, Collector<Double> out) throws Exception {
+    @Override public void flatMap1(DataToServe record, Collector<ServingResult> out) throws Exception {
 
         // See if we need to update
-        if(newModels.containsKey(record.getDataType())){
-            if(currentModels.containsKey(record.getDataType()))
-                currentModels.get(record.getDataType()).cleanup();
-            currentModels.put(record.getDataType(), newModels.get(record.getDataType()));
-            newModels.remove(record.getDataType());
+        if(newModels.containsKey(record.getType())){
+            if(currentModels.containsKey(record.getType()))
+                currentModels.get(record.getType()).cleanup();
+            currentModels.put(record.getType(), newModels.get(record.getType()));
+            newModels.remove(record.getType());
         }
-        if(currentModels.containsKey(record.getDataType())){
+        if(currentModels.containsKey(record.getType())){
             long start = System.currentTimeMillis();
-            double quality = (double) currentModels.get(record.getDataType()).score(record);
+            Object result = currentModels.get(record.getType()).score(record.getRecord());
             long duration = System.currentTimeMillis() - start;
-            System.out.println("Calculated quality - " + quality + " calculated in " + duration + " ms");
-            out.collect(quality);
+            out.collect(new ServingResult(duration, result));
         }
-        else
-            System.out.println("No model available - skipping");
     }
 
-    @Override public void flatMap2(ModelToServe model, Collector<Double> out) throws Exception {
+    @Override public void flatMap2(ModelToServe model, Collector<ServingResult> out) throws Exception {
         System.out.println("New model - " + model);
         Optional<Model> m = DataConverter.toModel(model);
         if(m.isPresent())

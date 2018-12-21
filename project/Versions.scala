@@ -18,7 +18,7 @@
 
 object Versions {
 
-  val flinkVersion        = "1.6.0"
+  val flinkVersion        = "1.7.0"
   val kafkaVersion        = "1.1.0"
   val tensorflowVersion   = "1.8.0"
   val PMMLVersion         = "1.4.1"

@@ -18,13 +18,8 @@
 
 package com.lightbend.model;
 
-import com.lightbend.model.PMML.PMMLModelFactory;
-import com.lightbend.model.tensorflow.TensorflowModelFactory;
-
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -32,25 +27,12 @@ import java.util.Optional;
  */
 public class DataConverter {
 
-    private static final Map<Integer, ModelFactory> factories = new HashMap<Integer, ModelFactory>() {
-        {
-            put(Modeldescriptor.ModelDescriptor.ModelType.TENSORFLOW.getNumber(), TensorflowModelFactory.getInstance());
-            put(Modeldescriptor.ModelDescriptor.ModelType.PMML.getNumber(), PMMLModelFactory.getInstance());
-        }
-    };
+    private static ModelFacroriesResolverInterface resolver = null;
 
     private DataConverter(){}
 
-    public static Optional<Winerecord.WineRecord> convertData(byte[] binary){
-        try {
-            // Unmarshall record
-            return Optional.of(Winerecord.WineRecord.parseFrom(binary));
-        } catch (Throwable t) {
-            // Oops
-            System.out.println("Exception parsing input record" + new String(binary));
-            t.printStackTrace();
-            return Optional.empty();
-        }
+    public static void setResolver(ModelFacroriesResolverInterface res){
+        resolver = res;
     }
 
     public static Optional<ModelToServe> convertModel(byte[] binary){
@@ -84,7 +66,7 @@ public class DataConverter {
             int type = (int) input.readLong();
             byte[] bytes = new byte[length];
             input.read(bytes);
-            ModelFactory factory = factories.get(type);
+            ModelFactory factory = resolver.getFactory(type);
             return Optional.of(factory.restore(bytes));
         } catch (Throwable t) {
             System.out.println("Error Deserializing model");
@@ -115,7 +97,7 @@ public class DataConverter {
         if (model == null)
             return null;
         else {
-            ModelFactory factory = factories.get(model.getType());
+            ModelFactory factory = resolver.getFactory((int) model.getType());
             if(factory != null)
                 return factory.restore(model.getBytes());
             return null;
@@ -123,14 +105,14 @@ public class DataConverter {
      }
 
     public static Model restore(int t, byte[] content){
-        ModelFactory factory = factories.get(t);
+        ModelFactory factory = resolver.getFactory(t);
         if(factory != null)
             return factory.restore(content);
         return null;
     }
 
     public static Optional<Model> toModel(ModelToServe model){
-        ModelFactory factory = factories.get(model.getModelType().getNumber());
+        ModelFactory factory = resolver.getFactory(model.getModelType().getNumber());
         if (factory != null)
             return factory.create(model);
         return Optional.empty();

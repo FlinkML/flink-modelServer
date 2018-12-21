@@ -18,15 +18,12 @@
 
 package com.lightbend.modelServer.keyed
 
-import com.lightbend.model.winerecord.WineRecord
-import com.lightbend.modelServer.model.Model
+import com.lightbend.modelServer.model.{DataToServe, Model}
 import com.lightbend.modelServer.typeschema.ModelTypeSerializer
-import com.lightbend.modelServer.{ModelToServe, ModelToServeStats}
-import org.apache.flink.api.common.state.{ListState, ListStateDescriptor, ValueState, ValueStateDescriptor}
+import com.lightbend.modelServer.{ModelToServe, ModelToServeStats, ServingResult}
+import org.apache.flink.api.common.state.{ListState, ValueState, ValueStateDescriptor}
 import org.apache.flink.api.scala.createTypeInformation
 import org.apache.flink.configuration.Configuration
-import org.apache.flink.runtime.state.{FunctionInitializationContext, FunctionSnapshotContext}
-import org.apache.flink.streaming.api.checkpoint.CheckpointedFunction
 import org.apache.flink.streaming.api.functions.co.CoProcessFunction
 import org.apache.flink.util.Collector
 
@@ -42,7 +39,7 @@ object DataProcessorKeyed {
   def apply() = new DataProcessorKeyed
 }
 
-class DataProcessorKeyed extends CoProcessFunction[WineRecord, ModelToServe, Double]{
+class DataProcessorKeyed extends CoProcessFunction[DataToServe, ModelToServe, ServingResult]{
 
   // In Flink class instance is created not for key, but rater key groups
   // https://ci.apache.org/projects/flink/flink-docs-release-1.6/dev/stream/state/state.html#keyed-state-and-operator-state
@@ -78,7 +75,7 @@ class DataProcessorKeyed extends CoProcessFunction[WineRecord, ModelToServe, Dou
   }
 
 
-  override def processElement2(model: ModelToServe, ctx: CoProcessFunction[WineRecord, ModelToServe, Double]#Context, out: Collector[Double]): Unit = {
+  override def processElement2(model: ModelToServe, ctx: CoProcessFunction[DataToServe, ModelToServe, ServingResult]#Context, out: Collector[ServingResult]): Unit = {
 
     if(newModel.value == null) newModel.update(None)
     if(currentModel.value == null) currentModel.update(None)
@@ -92,7 +89,7 @@ class DataProcessorKeyed extends CoProcessFunction[WineRecord, ModelToServe, Dou
     }
   }
 
-  override def processElement1(record: WineRecord, ctx: CoProcessFunction[WineRecord, ModelToServe, Double]#Context, out: Collector[Double]): Unit = {
+  override def processElement1(record: DataToServe, ctx: CoProcessFunction[DataToServe, ModelToServe, ServingResult]#Context, out: Collector[ServingResult]): Unit = {
 
     if(newModel.value == null) newModel.update(None)
     if(currentModel.value == null) currentModel.update(None)
@@ -110,13 +107,12 @@ class DataProcessorKeyed extends CoProcessFunction[WineRecord, ModelToServe, Dou
     currentModel.value match {
       case Some(model) => {
         val start = System.currentTimeMillis()
-        val quality = model.score(record.asInstanceOf[AnyVal]).asInstanceOf[Double]
+        val result = model.score(record.getRecord)
         val duration = System.currentTimeMillis() - start
         modelState.update(modelState.value().incrementUsage(duration))
-        println(s"Calculated quality - $quality calculated in $duration ms")
-        out.collect(quality);
+        out.collect(ServingResult(duration, result))
       }
-      case _ => println("No model available - skipping")
+      case _ =>
     }
   }
 }

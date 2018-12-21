@@ -20,17 +20,18 @@ package com.lightbend.modelServer
 
 import scala.util.Try
 import com.lightbend.model.modeldescriptor.ModelDescriptor
-import com.lightbend.modelServer.model.Model
-import com.lightbend.modelServer.model.PMML.PMMLModel
-import com.lightbend.modelServer.model.tensorflow.TensorFlowModel
+import com.lightbend.modelServer.model.{Model, ModelFactoryResolverTrait}
 
 /**
   * Created by boris on 5/8/17.
   */
 object ModelToServe {
-  private val factories = Map(ModelDescriptor.ModelType.PMML.value -> PMMLModel,
-    ModelDescriptor.ModelType.TENSORFLOW.value -> TensorFlowModel)
 
+  private var resolver : ModelFactoryResolverTrait = _
+
+  def setResolver(res : ModelFactoryResolverTrait) : Unit = resolver = res
+
+  override def toString: String = super.toString
   def fromByteArray(message: Array[Byte]): Try[ModelToServe] = Try{
     val m = ModelDescriptor.parseFrom(message)
     m.messageContent.isData match {
@@ -41,14 +42,14 @@ object ModelToServe {
 
   def copy(from: Option[Model]): Option[Model] =
     from match {
-      case Some(model) => Some(factories.get(model.getType.asInstanceOf[Int]).get.restore(model.toBytes()))
+      case Some(model) => Some(resolver.getFactory(model.getType.asInstanceOf[Int]).get.restore(model.toBytes()))
       case _ => None
     }
 
-  def restore(t : Int, content : Array[Byte]): Option[Model] = Some(factories.get(t).get.restore(content))
+  def restore(t : Int, content : Array[Byte]): Option[Model] = Some(resolver.getFactory(t).get.restore(content))
 
   def toModel(model: ModelToServe): Option[Model] =
-    factories.get(model.modelType.value) match {
+    resolver.getFactory(model.modelType.value) match {
       case Some(factory) => factory.create (model)
       case _ => None
     }
@@ -73,3 +74,5 @@ case class ModelToServeStats(name: String = "", description: String = "",
 }
 
 case class ModelWithType(isCurrent : Boolean, dataType: String, model: Option[Model])
+
+case class ServingResult(duration : Long, result: AnyVal)

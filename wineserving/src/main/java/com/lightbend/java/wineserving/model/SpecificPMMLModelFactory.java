@@ -16,30 +16,30 @@
  *
  */
 
-package com.lightbend.model.PMML;
+package com.lightbend.java.wineserving.model;
 
 import com.lightbend.model.Model;
-import com.lightbend.model.ModelToServe;
 import com.lightbend.model.ModelFactory;
+import com.lightbend.model.ModelToServe;
 
 import java.util.Optional;
 
 /**
  * Created by boris on 7/15/17.
  */
-public class PMMLModelFactory implements ModelFactory {
+public class SpecificPMMLModelFactory implements ModelFactory {
 
     private static ModelFactory instance = null;
 
-    private PMMLModelFactory(){}
+    private SpecificPMMLModelFactory(){}
 
     @Override
     public Optional<Model> create(ModelToServe descriptor) {
         try{
-            return Optional.of(new PMMLModel(descriptor.getModelData()));
+            return Optional.of(new SpecificPMMLModel(descriptor.getModelData()));
         }
         catch (Throwable t){
-            System.out.println("Exception creating PMMLModel from " + descriptor);
+            System.out.println("Exception creating SpecificPMMLModel from " + descriptor);
             t.printStackTrace();
             return Optional.empty();
         }
@@ -48,10 +48,10 @@ public class PMMLModelFactory implements ModelFactory {
     @Override
     public Model restore(byte[] bytes) {
         try{
-            return new PMMLModel(bytes);
+            return new SpecificPMMLModel(bytes);
         }
         catch (Throwable t){
-            System.out.println("Exception restoring PMMLModel from ");
+            System.out.println("Exception restoring SpecificPMMLModel from ");
             t.printStackTrace();
             return null;
         }
@@ -59,7 +59,7 @@ public class PMMLModelFactory implements ModelFactory {
 
     public static ModelFactory getInstance(){
         if(instance == null)
-            instance = new PMMLModelFactory();
+            instance = new SpecificPMMLModelFactory();
         return instance;
     }
 }

@@ -16,12 +16,14 @@
  *
  */
 
-package com.lightbend.modelserver.java.partitioned;
+package com.lightbend.java.wineserving.server;
 
 import com.lightbend.kafka.configuration.java.ModelServingConfiguration;
 import com.lightbend.model.DataConverter;
+import com.lightbend.model.DataToServe;
 import com.lightbend.model.ModelToServe;
-import com.lightbend.model.Winerecord;
+import com.lightbend.java.wineserving.model.ModelFactoryResolver;
+import com.lightbend.modelserver.java.partitioned.DataProcessorMap;
 import com.lightbend.modelserver.java.typeschema.ByteArraySchema;
 import org.apache.flink.api.common.typeinfo.PrimitiveArrayTypeInfo;
 import org.apache.flink.configuration.Configuration;
@@ -34,7 +36,7 @@ import org.apache.flink.runtime.minicluster.LocalFlinkMiniCluster;
 import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer011;
+import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer;
 import org.apache.flink.util.Collector;
 
 import java.util.Optional;
@@ -124,13 +126,13 @@ public class ModelServingFlatJob {
 
         // create a Kafka consumers
         // Data
-        FlinkKafkaConsumer011<byte[]> dataConsumer = new FlinkKafkaConsumer011<>(
+        FlinkKafkaConsumer<byte[]> dataConsumer = new FlinkKafkaConsumer<>(
                 ModelServingConfiguration.DATA_TOPIC,
                 new ByteArraySchema(),
                 dataKafkaProps);
 
         // Model
-        FlinkKafkaConsumer011<byte[]> modelConsumer = new FlinkKafkaConsumer011<>(
+        FlinkKafkaConsumer<byte[]> modelConsumer = new FlinkKafkaConsumer<>(
                 ModelServingConfiguration.MODELS_TOPIC,
                 new ByteArraySchema(),
                 modelKafkaProps);
@@ -138,6 +140,9 @@ public class ModelServingFlatJob {
         // Create input data streams
         DataStream<byte[]> modelsStream = env.addSource(modelConsumer, PrimitiveArrayTypeInfo.BYTE_PRIMITIVE_ARRAY_TYPE_INFO);
         DataStream<byte[]> dataStream = env.addSource(dataConsumer, PrimitiveArrayTypeInfo.BYTE_PRIMITIVE_ARRAY_TYPE_INFO);
+
+        // Set DataConverter
+        DataConverter.setResolver(new ModelFactoryResolver());
 
         // Read data from streams
         DataStream<ModelToServe> models = modelsStream
@@ -150,19 +155,20 @@ public class ModelServingFlatJob {
 
                 }).returns(ModelToServe.class)
                 .broadcast();
-        DataStream<Winerecord.WineRecord> data = dataStream
-                .flatMap((byte[] value, Collector<Winerecord.WineRecord> out) -> {
-                    Optional<Winerecord.WineRecord> record = DataConverter.convertData(value);
+        DataStream<DataToServe> data = dataStream
+                .flatMap((byte[] value, Collector<DataToServe> out) -> {
+                    Optional<DataRecord> record = DataRecord.convertData(value);
                     if (record.isPresent())
-                        out.collect(record.get());
+                        out.collect((DataToServe)record.get());
                     else
                         System.out.println("Failed to convert data input");
-                }).returns(Winerecord.WineRecord.class);
+                }).returns(DataToServe.class)
+                .keyBy(record -> record.getType());
 
         // Merge streams
         data
                 .connect(models)
                 .flatMap(new DataProcessorMap())
-                .map(result -> {System.out.println("Model serving result " + result); return result;});
+                .map(result -> {System.out.println(result); return result;});
     }
 }

@@ -29,7 +29,7 @@ import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.functions.co.CoProcessFunction;
 import org.apache.flink.util.Collector;
 
-public class DataProcessorKeyed extends CoProcessFunction<Winerecord.WineRecord, ModelToServe, Double>{
+public class DataProcessorKeyed extends CoProcessFunction<DataToServe, ModelToServe, ServingResult>{
 
     ValueState<ModelToServeStats> modelState;
     ValueState<ModelToServeStats> newModelState;
@@ -61,7 +61,7 @@ public class DataProcessorKeyed extends CoProcessFunction<Winerecord.WineRecord,
         newModel = getRuntimeContext().getState(newModelDesc);
     }
 
-    @Override public void processElement1(Winerecord.WineRecord value, Context ctx, Collector<Double> out) throws Exception {
+    @Override public void processElement1(DataToServe value, Context ctx, Collector<ServingResult> out) throws Exception {
 
         // See if we have update for the model
         if(newModel.value() != null){
@@ -76,18 +76,15 @@ public class DataProcessorKeyed extends CoProcessFunction<Winerecord.WineRecord,
         // Process data
         if (currentModel.value() != null){
             long start = System.currentTimeMillis();
-            double quality = (double)currentModel.value().score(value);
+            Object result = currentModel.value().score(value.getRecord());
             long duration = System.currentTimeMillis() - start;
             modelState.update(modelState.value().incrementUsage(duration));
-            System.out.println("Calculated quality - " + quality + " calculated in " + duration + " ms");
-            out.collect(quality);
+            out.collect(new ServingResult(duration,result));
         }
-        else
-            System.out.println("No model available - skipping");
      }
 
     @Override
-    public void processElement2(ModelToServe model, Context ctx, Collector<Double> out) throws Exception {
+    public void processElement2(ModelToServe model, Context ctx, Collector<ServingResult> out) throws Exception {
         System.out.println("New model - " + model);
         newModelState.update(new ModelToServeStats(model));
         newModel.update(DataConverter.toModel(model).orElse(null));

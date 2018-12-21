@@ -46,7 +46,10 @@ lazy val server = (project in file("./server"))
   .settings(libraryDependencies ++= Dependencies.flinkDependencies)
   .dependsOn(model, configuration)
 
+lazy val wineserving = (project in file("./wineserving"))
+  .dependsOn(server)
+
 lazy val configuration = (project in file("./configuration"))
 
 lazy val root = (project in file(".")).
-  aggregate(protobufs, query, client, model, configuration, server)
+  aggregate(protobufs, query, client, model, configuration, server, wineserving)

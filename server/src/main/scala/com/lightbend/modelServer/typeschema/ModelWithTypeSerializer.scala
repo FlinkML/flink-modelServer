@@ -1,9 +1,11 @@
 package com.lightbend.modelServer.typeschema
 
+import java.io.IOException
+
 import com.lightbend.modelServer.{ModelToServe, ModelWithType}
-import com.lightbend.modelServer.model.Model
-import org.apache.flink.api.common.typeutils.{CompatibilityResult, GenericTypeSerializerConfigSnapshot, TypeSerializer, TypeSerializerConfigSnapshot}
+import org.apache.flink.api.common.typeutils._
 import org.apache.flink.core.memory.{DataInputView, DataOutputView}
+import org.apache.flink.util.InstantiationUtil
 
 class ModelWithTypeSerializer extends TypeSerializer[ModelWithType] {
 
@@ -12,12 +14,6 @@ class ModelWithTypeSerializer extends TypeSerializer[ModelWithType] {
   override def canEqual(obj: scala.Any): Boolean = obj.isInstanceOf[ModelWithTypeSerializer]
 
   override def duplicate(): TypeSerializer[ModelWithType] = new ModelWithTypeSerializer
-
-  override def ensureCompatibility(configSnapshot: TypeSerializerConfigSnapshot): CompatibilityResult[ModelWithType] =
-    configSnapshot match{
-      case _ : ModelWithTypeSerializerConfigSnapshot => CompatibilityResult.compatible()
-      case _ => CompatibilityResult.requiresMigration()
-    }
 
   override def serialize(model: ModelWithType, target: DataOutputView): Unit = {
     target.writeBoolean(model.isCurrent)
@@ -37,7 +33,7 @@ class ModelWithTypeSerializer extends TypeSerializer[ModelWithType] {
 
   override def getLength: Int = -1
 
-  override def snapshotConfiguration(): TypeSerializerConfigSnapshot = new ModelWithTypeSerializerConfigSnapshot
+  override def snapshotConfiguration(): TypeSerializerSnapshot[ModelWithType] = new ModelWithTypeSerializerConfigSnapshot
 
   override def copy(from: ModelWithType): ModelWithType =
     ModelWithType(from.isCurrent, from.dataType, ModelToServe.copy(from.model))
@@ -87,35 +83,52 @@ object ModelWithTypeSerializer{
   def apply : ModelWithTypeSerializer = new ModelWithTypeSerializer()
 }
 
+object ModelWithTypeSerializerConfigSnapshot{
 
-object ModelWithTypeSerializerConfigSnapshot {
-  val VERSION = 1
+  val CURRENT_VERSION = 2
 }
 
-class ModelWithTypeSerializerConfigSnapshot
-  extends TypeSerializerConfigSnapshot{
+
+class ModelWithTypeSerializerConfigSnapshot extends SimpleTypeSerializerSnapshot[ModelWithType]{
 
   import ModelWithTypeSerializerConfigSnapshot._
 
-  //  def this() {this(classOf[T])}
+  private var serializerClass = classOf[ModelWithTypeSerializer]
 
-  override def getVersion = VERSION
+  override def getCurrentVersion: Int = CURRENT_VERSION
 
-  var typeClass = classOf[ModelWithType]
-
-  override def write(out: DataOutputView): Unit = {
-    super.write(out)
-    // write only the classname to avoid Java serialization
-    out.writeUTF(classOf[ModelWithType].getName)
+  override def writeSnapshot(out: DataOutputView): Unit = {
+    out.writeUTF(serializerClass.getClass.getName)
   }
 
-  override def equals(obj: Any): Boolean = {
-    obj match {
-      case null => false
-      case value if value == this => true
-      case _ =>  (obj.getClass == getClass) && typeClass == obj.asInstanceOf[GenericTypeSerializerConfigSnapshot[_]].getTypeClass
+  override def readSnapshot(readVersion: Int, in: DataInputView, classLoader: ClassLoader): Unit = {
+    readVersion match {
+      case 2 =>
+        val className = in.readUTF
+        resolveClassName(className, classLoader, false)
+       case _ =>
+        throw new IOException("Unrecognized version: " + readVersion)
     }
   }
 
-  override def hashCode: Int = 42
+  override def restoreSerializer(): TypeSerializer[ModelWithType] = InstantiationUtil.instantiate(serializerClass)
+
+  override def resolveSchemaCompatibility(newSerializer: TypeSerializer[ModelWithType]): TypeSerializerSchemaCompatibility[ModelWithType] =
+    if (newSerializer.getClass eq serializerClass) TypeSerializerSchemaCompatibility.compatibleAsIs()
+    else TypeSerializerSchemaCompatibility.incompatible()
+
+  private def resolveClassName(className: String, cl: ClassLoader, allowCanonicalName: Boolean): Unit =
+    try
+      serializerClass = cast(Class.forName(className, false, cl))
+    catch {
+      case e: Throwable =>
+        throw new IOException("Failed to read SimpleTypeSerializerSnapshot: Serializer class not found: " + className, e)
+  }
+
+  @SuppressWarnings(Array("unchecked"))
+  @throws[IOException]
+  private def cast[T](clazz: Class[_]) : Class[ModelWithTypeSerializer]   = {
+    if (!classOf[ModelWithTypeSerializer].isAssignableFrom(clazz)) throw new IOException("Failed to read SimpleTypeSerializerSnapshot. " + "Serializer class name leads to a class that is not a TypeSerializer: " + clazz.getName)
+    clazz.asInstanceOf[Class[ModelWithTypeSerializer]]
+  }
 }

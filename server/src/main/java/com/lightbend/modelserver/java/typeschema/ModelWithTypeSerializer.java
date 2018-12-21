@@ -21,9 +21,8 @@ package com.lightbend.modelserver.java.typeschema;
 import com.lightbend.model.DataConverter;
 import com.lightbend.model.Model;
 import com.lightbend.model.ModelWithType;
-import org.apache.flink.api.common.typeutils.CompatibilityResult;
 import org.apache.flink.api.common.typeutils.TypeSerializer;
-import org.apache.flink.api.common.typeutils.TypeSerializerConfigSnapshot;
+import org.apache.flink.api.common.typeutils.TypeSerializerSnapshot;
 import org.apache.flink.core.memory.DataInputView;
 import org.apache.flink.core.memory.DataOutputView;
 
@@ -37,11 +36,6 @@ public class ModelWithTypeSerializer extends TypeSerializer<ModelWithType> {
     @Override public boolean canEqual(Object obj) { return obj instanceof ModelWithTypeSerializer; }
 
     @Override public TypeSerializer<ModelWithType> duplicate() { return new ModelWithTypeSerializer(); }
-
-    @Override public CompatibilityResult<ModelWithType> ensureCompatibility(TypeSerializerConfigSnapshot configSnapshot) {
-        if(configSnapshot instanceof ModelWithTypeSerializerConfigSnapshot) return CompatibilityResult.compatible();
-        return CompatibilityResult.requiresMigration();
-    }
 
     @Override public void serialize(ModelWithType model, DataOutputView target) throws IOException {
 
@@ -63,7 +57,7 @@ public class ModelWithTypeSerializer extends TypeSerializer<ModelWithType> {
 
     @Override public int getLength() { return -1; }
 
-    @Override public TypeSerializerConfigSnapshot snapshotConfiguration() { return new ModelWithTypeSerializerConfigSnapshot(); }
+    @Override public TypeSerializerSnapshot<ModelWithType> snapshotConfiguration() { return new ModelWithTypeSerializerConfigSnapshot(); }
 
 
     @Override public boolean equals(Object obj) { return obj instanceof ModelWithTypeSerializer; }

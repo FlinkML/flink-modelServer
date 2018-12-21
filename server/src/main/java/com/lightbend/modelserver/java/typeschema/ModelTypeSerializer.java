@@ -20,9 +20,8 @@ package com.lightbend.modelserver.java.typeschema;
 
 import com.lightbend.model.DataConverter;
 import com.lightbend.model.Model;
-import org.apache.flink.api.common.typeutils.CompatibilityResult;
 import org.apache.flink.api.common.typeutils.TypeSerializer;
-import org.apache.flink.api.common.typeutils.TypeSerializerConfigSnapshot;
+import org.apache.flink.api.common.typeutils.TypeSerializerSnapshot;
 import org.apache.flink.core.memory.DataInputView;
 import org.apache.flink.core.memory.DataOutputView;
 
@@ -35,11 +34,6 @@ public class ModelTypeSerializer extends TypeSerializer<Model> {
     @Override public boolean canEqual(Object obj) { return obj instanceof ModelTypeSerializer; }
 
     @Override public TypeSerializer<Model> duplicate() { return new ModelTypeSerializer(); }
-
-    @Override public CompatibilityResult<Model> ensureCompatibility(TypeSerializerConfigSnapshot configSnapshot) {
-        if(configSnapshot instanceof ModelSerializerConfigSnapshot) return CompatibilityResult.compatible();
-        return CompatibilityResult.requiresMigration();
-    }
 
     @Override public void serialize(Model model, DataOutputView target) throws IOException {
 
@@ -58,7 +52,7 @@ public class ModelTypeSerializer extends TypeSerializer<Model> {
 
     @Override public int getLength() { return -1; }
 
-    @Override public TypeSerializerConfigSnapshot snapshotConfiguration() { return new ModelSerializerConfigSnapshot(); }
+    @Override public TypeSerializerSnapshot<Model> snapshotConfiguration() { return new ModelSerializerConfigSnapshot(); }
 
 
     @Override public boolean equals(Object obj) { return obj instanceof ModelTypeSerializer; }

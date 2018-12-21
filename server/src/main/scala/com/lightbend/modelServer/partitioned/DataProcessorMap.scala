@@ -24,9 +24,8 @@ package com.lightbend.modelServer.partitioned
   * Main class processing data using models
   *
   */
-import com.lightbend.model.winerecord.WineRecord
-import com.lightbend.modelServer.{ModelToServe, ModelWithType}
-import com.lightbend.modelServer.model.Model
+import com.lightbend.modelServer.{ModelToServe, ModelWithType, ServingResult}
+import com.lightbend.modelServer.model.{DataToServe, Model}
 import com.lightbend.modelServer.typeschema.ModelWithTypeSerializer
 import org.apache.flink.api.common.state.{ListState, ListStateDescriptor, MapState}
 import org.apache.flink.runtime.state.{FunctionInitializationContext, FunctionSnapshotContext}
@@ -35,13 +34,13 @@ import org.apache.flink.streaming.api.functions.co.RichCoFlatMapFunction
 import org.apache.flink.util.Collector
 
 import scala.collection.JavaConverters._
-import scala.collection.mutable.{Map, ListBuffer}
+import scala.collection.mutable.{ListBuffer, Map}
 
 object DataProcessorMap{
-  def apply() : DataProcessorMap = new DataProcessorMap()
+  def apply() = new DataProcessorMap
 }
 
-class DataProcessorMap extends RichCoFlatMapFunction[WineRecord, ModelToServe, Double] with CheckpointedFunction {
+class DataProcessorMap extends RichCoFlatMapFunction[DataToServe, ModelToServe, ServingResult] with CheckpointedFunction {
 
   private var currentModels = Map[String, Model]()
   private var newModels = Map[String, Model]()
@@ -78,7 +77,7 @@ class DataProcessorMap extends RichCoFlatMapFunction[WineRecord, ModelToServe, D
     }
   }
 
-  override def flatMap2(model: ModelToServe, out: Collector[Double]): Unit = {
+  override def flatMap2(model: ModelToServe, out: Collector[ServingResult]): Unit = {
 
     println(s"New model - $model")
     ModelToServe.toModel(model) match {
@@ -87,27 +86,26 @@ class DataProcessorMap extends RichCoFlatMapFunction[WineRecord, ModelToServe, D
     }
   }
 
-  override def flatMap1(record: WineRecord, out: Collector[Double]): Unit = {
+  override def flatMap1(record: DataToServe, out: Collector[ServingResult]): Unit = {
     // See if we need to update
-    newModels.contains(record.dataType) match {
+    newModels.contains(record.getType) match {
       case true =>
-        currentModels.contains(record.dataType) match {
-          case true => currentModels(record.dataType).cleanup()
+        currentModels.contains(record.getType) match {
+          case true => currentModels(record.getType).cleanup()
           case _ =>
         }
-        currentModels += (record.dataType -> newModels(record.dataType))
-        newModels -= record.dataType
+        currentModels += (record.getType -> newModels(record.getType))
+        newModels -= record.getType
       case _ =>
     }
     // actually process
-    currentModels.contains(record.dataType) match {
+    currentModels.contains(record.getType) match {
       case true =>
         val start = System.currentTimeMillis()
-        val quality = currentModels(record.dataType).score(record.asInstanceOf[AnyVal]).asInstanceOf[Double]
+        val result = currentModels(record.getType).score(record.getRecord)
         val duration = System.currentTimeMillis() - start
-        println(s"Subtask ${this.getRuntimeContext.getIndexOfThisSubtask} calculated quality - $quality calculated in $duration ms")
-        out.collect(quality)
-      case _ => println("No model available - skipping")
+        out.collect(ServingResult(duration, result))
+      case _ =>
     }
   }
 }

@@ -23,7 +23,7 @@ object Dependencies {
 
   val flinkScala            = "org.apache.flink"    % "flink-scala_2.11"                    % flinkVersion
   val flinkStreaming        = "org.apache.flink"    % "flink-streaming-scala_2.11"          % flinkVersion
-  val flinkKafka            = "org.apache.flink"    %% "flink-connector-kafka-0.11"         % flinkVersion
+  val flinkKafka            = "org.apache.flink"    %% "flink-connector-kafka"              % flinkVersion
   val flinkQueryableRuntime = "org.apache.flink"    %% "flink-queryable-state-runtime"      % flinkVersion
   val flinkQueryableClient  = "org.apache.flink"    %% "flink-queryable-state-client-java"  % flinkVersion
   val kafka                 = "org.apache.kafka"    % "kafka_2.11"                          % kafkaVersion

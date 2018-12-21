@@ -16,29 +16,29 @@
  *
  */
 
-package com.lightbend.model.tensorflow;
+package com.lightbend.java.wineserving.model;
 
 import com.lightbend.model.Model;
-import com.lightbend.model.ModelToServe;
 import com.lightbend.model.ModelFactory;
+import com.lightbend.model.ModelToServe;
 
 import java.util.Optional;
 
 /**
  * Created by boris on 7/15/17.
  */
-public class TensorflowModelFactory implements ModelFactory {
+public class SpecificTensorflowModelFactory implements ModelFactory {
 
-    private static TensorflowModelFactory instance = null;
+    private static SpecificTensorflowModelFactory instance = null;
 
     @Override
     public Optional<Model> create(ModelToServe descriptor) {
 
         try{
-            return Optional.of(new TensorflowModel(descriptor.getModelData()));
+            return Optional.of(new SpecificTensorflowModel(descriptor.getModelData()));
         }
         catch (Throwable t){
-            System.out.println("Exception creating TensorflowModel from " + descriptor);
+            System.out.println("Exception creating SpecificTensorflowModel from " + descriptor);
             t.printStackTrace();
             return Optional.empty();
         }
@@ -47,7 +47,7 @@ public class TensorflowModelFactory implements ModelFactory {
     @Override
     public Model restore(byte[] bytes) {
         try{
-            return new TensorflowModel(bytes);
+            return new SpecificTensorflowModel(bytes);
         }
         catch (Throwable t){
             System.out.println("Exception restoring PMMLModel from ");
@@ -58,7 +58,7 @@ public class TensorflowModelFactory implements ModelFactory {
 
     public static ModelFactory getInstance(){
         if(instance == null)
-            instance = new TensorflowModelFactory();
+            instance = new SpecificTensorflowModelFactory();
         return instance;
     }
 

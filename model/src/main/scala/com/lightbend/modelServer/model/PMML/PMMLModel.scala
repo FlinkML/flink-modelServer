@@ -27,19 +27,16 @@ package com.lightbend.modelServer.model.PMML
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 
 import com.lightbend.model.modeldescriptor.ModelDescriptor
-import com.lightbend.model.winerecord.WineRecord
-import com.lightbend.modelServer.ModelToServe
 import com.lightbend.modelServer.model.{Model, ModelFactory}
 import org.dmg.pmml.{FieldName, PMML}
 import org.jpmml.evaluator.visitors._
-import org.jpmml.evaluator.{Computable, FieldValue, ModelEvaluatorFactory, TargetField}
+import org.jpmml.evaluator.{FieldValue, ModelEvaluatorFactory, TargetField}
 import org.jpmml.model.PMMLUtil
 
-import scala.collection.JavaConversions._
 import scala.collection._
 
 
-class PMMLModel(inputStream: Array[Byte]) extends Model {
+abstract class PMMLModel(inputStream: Array[Byte]) extends Model(inputStream) {
 
   var arguments = mutable.Map[FieldName, FieldValue]()
 
@@ -47,7 +44,7 @@ class PMMLModel(inputStream: Array[Byte]) extends Model {
   val pmml = PMMLUtil.unmarshal(new ByteArrayInputStream(inputStream))
 
   // Optimize model// Optimize model
-  PMMLModel.optimize(pmml)
+  PMMLModelBase.optimize(pmml)
 
   // Create and verify evaluator
   val evaluator = ModelEvaluatorFactory.newInstance.newModelEvaluator(pmml)
@@ -58,33 +55,7 @@ class PMMLModel(inputStream: Array[Byte]) extends Model {
   val target: TargetField = evaluator.getTargetFields.get(0)
   val tname = target.getName
 
-  override def score(input: AnyVal): AnyVal = {
-    val inputs = input.asInstanceOf[WineRecord]
-    arguments.clear()
-    inputFields.foreach(field => {
-      arguments.put(field.getName, field.prepare(getValueByName(inputs, field.getName.getValue)))
-    })
-
-    // Calculate Output// Calculate Output
-    val result = evaluator.evaluate(arguments)
-
-    // Prepare output
-    result.get(tname) match {
-      case c : Computable => c.getResult.toString.toDouble
-      case v : Any => v.asInstanceOf[Double]
-    }
-  }
-
   override def cleanup(): Unit = {}
-
-  private def getValueByName(inputs : WineRecord, name: String) : Double =
-  PMMLModel.names.get(name) match {
-    case Some(index) => {
-     val v = inputs.getFieldByNumber(index + 1)
-      v.asInstanceOf[Double]
-    }
-    case _ => .0
-  }
 
   override def toBytes : Array[Byte] = {
     var stream = new ByteArrayOutputStream()
@@ -95,7 +66,7 @@ class PMMLModel(inputStream: Array[Byte]) extends Model {
   override def getType: Long = ModelDescriptor.ModelType.PMML.value
 }
 
-object PMMLModel extends ModelFactory {
+object PMMLModelBase{
 
   private val optimizers = Array(new ExpressionOptimizer, new FieldOptimizer, new PredicateOptimizer, new GeneralRegressionModelOptimizer, new NaiveBayesModelOptimizer, new RegressionModelOptimizer)
   def optimize(pmml : PMML) = this.synchronized {
@@ -110,18 +81,4 @@ object PMMLModel extends ModelFactory {
       }
     )
   }
-  private val names = Map("fixed acidity" -> 0,
-    "volatile acidity" -> 1,"citric acid" ->2,"residual sugar" -> 3,
-    "chlorides" -> 4,"free sulfur dioxide" -> 5,"total sulfur dioxide" -> 6,
-    "density" -> 7,"pH" -> 8,"sulphates" ->9,"alcohol" -> 10)
-
-  override def create(input: ModelToServe): Option[Model] = {
-    try {
-      Some(new PMMLModel(input.model))
-    }catch{
-      case t: Throwable => None
-    }
-  }
-
-  override def restore(bytes: Array[Byte]): Model = new PMMLModel(bytes)
 }

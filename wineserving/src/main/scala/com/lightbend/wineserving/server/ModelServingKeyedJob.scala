@@ -1,37 +1,21 @@
-/*
- * Copyright (C) 2017  Lightbend
- *
- * This file is part of flink-ModelServing
- *
- * flink-ModelServing is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- */
-
-package com.lightbend.modelServer.keyed
+package com.lightbend.wineserving.server
 
 import java.util.Properties
 
 import com.lightbend.kafka.configuration.ModelServingConfiguration
-import com.lightbend.model.winerecord.WineRecord
+import com.lightbend.modelServer.ModelToServe
+import com.lightbend.modelServer.keyed.DataProcessorKeyed
+import com.lightbend.modelServer.model.DataToServe
 import com.lightbend.modelServer.typeschema.ByteArraySchema
-import com.lightbend.modelServer.{BadDataHandler, DataRecord, ModelToServe}
-import org.apache.flink.api.scala._
-import org.apache.flink.configuration._
+import com.lightbend.wineserving.model.ModeFactoryResolver
+import org.apache.flink.configuration.{Configuration, JobManagerOptions, QueryableStateOptions, TaskManagerOptions}
 import org.apache.flink.runtime.concurrent.Executors
 import org.apache.flink.runtime.highavailability.HighAvailabilityServicesUtils
 import org.apache.flink.runtime.minicluster.LocalFlinkMiniCluster
 import org.apache.flink.streaming.api.TimeCharacteristic
 import org.apache.flink.streaming.api.scala.StreamExecutionEnvironment
-import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer010
+import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer
+import org.apache.flink.streaming.api.scala._
 
 
 /**
@@ -96,7 +80,7 @@ object ModelServingKeyedJob {
       val env = StreamExecutionEnvironment.createRemoteEnvironment("localhost", flinkCluster.getLeaderRPCPort)
        // Build Graph
       buildGraph(env)
-      val jobGraph = env.getStreamGraph.getJobGraph
+      val jobGraph = env.getStreamGraph.getJobGraph()
       // Submit to the server and wait for completion
       flinkCluster.submitJobAndWait(jobGraph, false)
     } catch {
@@ -108,7 +92,7 @@ object ModelServingKeyedJob {
   def executeLocal() : Unit = {
     val env = StreamExecutionEnvironment.getExecutionEnvironment
     buildGraph(env)
-    System.out.println("[info] Job ID: " + env.getStreamGraph.getJobGraph.getJobID)
+    System.out.println("[info] Job ID: " + env.getStreamGraph.getJobGraph().getJobID)
     env.execute()
   }
 
@@ -138,14 +122,14 @@ object ModelServingKeyedJob {
 
     // create a Kafka consumers
     // Data
-    val dataConsumer = new FlinkKafkaConsumer010[Array[Byte]](
+    val dataConsumer = new FlinkKafkaConsumer[Array[Byte]](
       DATA_TOPIC,
       new ByteArraySchema,
       dataKafkaProps
     )
 
     // Model
-    val modelConsumer = new FlinkKafkaConsumer010[Array[Byte]](
+    val modelConsumer = new FlinkKafkaConsumer[Array[Byte]](
       MODELS_TOPIC,
       new ByteArraySchema,
       modelKafkaProps
@@ -155,18 +139,21 @@ object ModelServingKeyedJob {
     val modelsStream = env.addSource(modelConsumer)
     val dataStream = env.addSource(dataConsumer)
 
+    // Set modelToServe
+    ModelToServe.setResolver(ModeFactoryResolver)
+
     // Read data from streams
     val models = modelsStream.map(ModelToServe.fromByteArray(_))
       .flatMap(BadDataHandler[ModelToServe])
       .keyBy(_.dataType)
     val data = dataStream.map(DataRecord.fromByteArray(_))
-      .flatMap(BadDataHandler[WineRecord])
-      .keyBy(_.dataType)
+      .flatMap(BadDataHandler[DataRecord]).map(_.asInstanceOf[DataToServe])
+      .keyBy(_.getType)
 
     // Merge streams
     data
       .connect(models)
       .process(DataProcessorKeyed())
-      .map(result => println(s"Model serving result $result"))
+      .map(result => println(s"Model serving in ${result.duration} ms, with result ${result.result}"))
   }
 }
