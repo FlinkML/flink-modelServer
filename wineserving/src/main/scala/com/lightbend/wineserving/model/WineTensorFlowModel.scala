@@ -24,16 +24,14 @@ import com.lightbend.modelServer.model.tensorflow.TensorFlowModel
 import com.lightbend.modelServer.model.{Model, ModelFactory}
 import org.tensorflow.Tensor
 
-/**
-  * Created by boris on 5/26/17.
-  * Implementation of tensorflow model
-  */
-
-class SpecificTensorFlowModel(inputStream : Array[Byte]) extends TensorFlowModel(inputStream) {
+// Tensorflow model implementation for wine data
+class WineTensorFlowModel(inputStream : Array[Byte]) extends TensorFlowModel(inputStream) {
 
   override def score(input: AnyVal): AnyVal = {
 
+    // Convert input data
     val record = input.asInstanceOf[WineRecord]
+    // Create input tensor
     val data = Array(
       record.fixedAcidity.toFloat,
       record.volatileAcidity.toFloat,
@@ -48,10 +46,14 @@ class SpecificTensorFlowModel(inputStream : Array[Byte]) extends TensorFlowModel
       record.alcohol.toFloat
     )
     val modelInput = Tensor.create(Array(data))
+    // Serve model using tensorflow APIs
     val result = session.runner.feed("dense_1_input", modelInput).fetch("dense_3/Sigmoid").run().get(0)
+    // Get result shape
     val rshape = result.shape
+    // Map output tensor to shape
     var rMatrix = Array.ofDim[Float](rshape(0).asInstanceOf[Int], rshape(1).asInstanceOf[Int])
     result.copyTo(rMatrix)
+    // Get result
     var value = (0, rMatrix(0)(0))
     1 to (rshape(1).asInstanceOf[Int] - 1) foreach { i => {
       if (rMatrix(0)(i) > value._2)
@@ -62,15 +64,16 @@ class SpecificTensorFlowModel(inputStream : Array[Byte]) extends TensorFlowModel
   }
 }
 
-object SpecificTensorFlowModel extends  ModelFactory {
+// Factory for wine data PMML model
+object WineTensorFlowModel extends  ModelFactory {
 
   override def create(input: ModelToServe): Option[Model] = {
     try {
-      Some(new SpecificTensorFlowModel(input.model))
+      Some(new WineTensorFlowModel(input.model))
     }catch{
       case t: Throwable => None
     }
   }
 
-  override def restore(bytes: Array[Byte]): Model = new SpecificTensorFlowModel(bytes)
+  override def restore(bytes: Array[Byte]): Model = new WineTensorFlowModel(bytes)
 }

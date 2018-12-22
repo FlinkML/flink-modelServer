@@ -18,23 +18,22 @@
 
 package com.lightbend.java.wineserving.model;
 
-/**
- * Created by boris on 5/26/17.
- */
-
 import com.lightbend.model.Winerecord;
 import com.lightbend.model.tensorflow.TensorflowModel;
 import org.tensorflow.Tensor;
 
-public class SpecificTensorflowModel extends TensorflowModel {
+// Tensorflow implementation for wine data
+public class WineTensorflowModel extends TensorflowModel {
 
-    public SpecificTensorflowModel(byte[] inputStream) {
+    public WineTensorflowModel(byte[] inputStream) {
         super(inputStream);
     }
 
     @Override
     public Object score(Object input) {
+        // Convert input data
         Winerecord.WineRecord record = (Winerecord.WineRecord) input;
+        // Build input tensor
         float[][] data = {{
                 (float)record.getFixedAcidity(),
                 (float)record.getVolatileAcidity(),
@@ -49,7 +48,9 @@ public class SpecificTensorflowModel extends TensorflowModel {
                 (float)record.getAlcohol()
         }};
         Tensor modelInput = Tensor.create(data);
+        // Serve using tensorflow APIs
         Tensor result = session.runner().feed("dense_1_input", modelInput).fetch("dense_3/Sigmoid").run().get(0);
+        // Convert result
         long[] rshape = result.shape();
         float[][] rMatrix = new float[(int)rshape[0]][(int)rshape[1]];
         result.copyTo(rMatrix);
@@ -63,6 +64,7 @@ public class SpecificTensorflowModel extends TensorflowModel {
         return (double)value.getIndex();
     }
 
+    // Support class for tensorflow transform
     private class Intermediate{
         private int index;
         private float value;

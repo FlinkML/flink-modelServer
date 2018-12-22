@@ -18,21 +18,30 @@
 
 package com.lightbend.model;
 
-import java.util.Objects;
-
+// Model serving statistics definition
 public class ModelToServeStats {
 
+    // Model name
     private String name;
+    // Model description
     private String description;
+    // Model type
     private Modeldescriptor.ModelDescriptor.ModelType modelType;
+    // Model usage start time
     private long since;
+    // Usage number
     private long invocations;
+    // Cumulative service time
     private double duration;
+    // Min duration of service
     private long min;
+    // Max service duration
     private long max;
 
+    // Default constructor
     public ModelToServeStats(){}
 
+    // Constructor
     public ModelToServeStats(final String name, final String description, Modeldescriptor.ModelDescriptor.ModelType modelType) {
         this.name = name;
         this.description = description;
@@ -44,6 +53,7 @@ public class ModelToServeStats {
         this.max = Long.MIN_VALUE;
     }
 
+    // Constructor
     public ModelToServeStats(final String name, final String description, Modeldescriptor.ModelDescriptor.ModelType modelType,
                              final long since, final long invocations, final double duration, final long min, final long max) {
         this.name = name;
@@ -56,6 +66,7 @@ public class ModelToServeStats {
         this.max = max;
     }
 
+    // Constructor
     public ModelToServeStats(ModelToServe model){
         this.name = model.getName();
         this.description = model.getDescription();
@@ -67,6 +78,7 @@ public class ModelToServeStats {
         this.max = Long.MIN_VALUE;
     }
 
+    // Increment usage. Invoked every time serving is completed
     public ModelToServeStats incrementUsage(long execution){
         invocations++;
         duration += execution;
@@ -75,6 +87,7 @@ public class ModelToServeStats {
         return this;
     }
 
+    // Setters and getters
     public String getName() {return name;}
 
     public void setName(String name) {this.name = name;}
@@ -114,23 +127,5 @@ public class ModelToServeStats {
                 ", min=" + min +
                 ", max=" + max +
                 '}';
-    }
-
-    @Override
-    public boolean equals(final Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        final ModelToServeStats that = (ModelToServeStats) o;
-        return name.equals(that.name) &&
-               description.equals(that.description);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(name, description);
     }
 }

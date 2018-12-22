@@ -30,11 +30,10 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-/**
- * Created by boris on 5/18/17.
- */
-public class SpecificPMMLModel extends PMMLModel {
+// PMML implementation for wine data
+public class WinePMMLModel extends PMMLModel {
 
+    // Map of names for wine data
     private static Map<String, String> names = createNamesMap();
     private static Map<String, String> createNamesMap() {
         Map<String, String> map = new HashMap<>();
@@ -52,22 +51,27 @@ public class SpecificPMMLModel extends PMMLModel {
         return map;
     }
 
+    // Arguments
     private Map<FieldName, FieldValue> arguments = new LinkedHashMap<>();
 
-    public SpecificPMMLModel(byte[] input) throws Throwable{
+    public WinePMMLModel(byte[] input) throws Throwable{
 
         super(input);
     }
 
+    // Scoring method
     @Override
     public Object score(Object input) {
+        // Convert input
         Winerecord.WineRecord inputs = (Winerecord.WineRecord) input;
+        // Clear arguments
         arguments.clear();
+        // Populate arguments with incoming data
         for(InputField field : inputFields){
            arguments.put(field.getName(), field.prepare(getValueByName(inputs,field.getName().getValue())));
         }
 
-        // Calculate Output// Calculate Output
+        // Calculate Output using PMML evaluator
         Map<FieldName, ?> result = evaluator.evaluate(arguments);
 
         // Prepare output

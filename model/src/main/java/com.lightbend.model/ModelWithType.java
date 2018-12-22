@@ -20,9 +20,14 @@ package com.lightbend.model;
 
 import java.util.Optional;
 
+// Intermediate representation used for checkpointing
 public class ModelWithType {
+
+    // Is model current
     private boolean current;
+    // Model data type
     private String dataType;
+    // MOdel
     private Optional<Model> model;
 
     public ModelWithType(){
@@ -37,29 +42,17 @@ public class ModelWithType {
         this.model = model;
     }
 
-    public boolean isCurrent() {
-        return current;
-    }
+    public boolean isCurrent() { return current; }
 
-    public void setCurrent(boolean current) {
-        this.current = current;
-    }
+    public void setCurrent(boolean current) { this.current = current; }
 
-    public String getDataType() {
-        return dataType;
-    }
+    public String getDataType() { return dataType; }
 
-    public void setDataType(String dataType) {
-        this.dataType = dataType;
-    }
+    public void setDataType(String dataType) { this.dataType = dataType; }
 
-    public Optional<Model> getModel() {
-        return model;
-    }
+    public Optional<Model> getModel() { return model; }
 
-    public void setModel(Optional<Model> model) {
-        this.model = model;
-    }
+    public void setModel(Optional<Model> model) { this.model = model; }
 
     @Override
     public String toString() {

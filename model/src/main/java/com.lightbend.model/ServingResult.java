@@ -1,8 +1,11 @@
 package com.lightbend.model;
 
+// Model serving definition. Can be extended in the future
 public class ServingResult {
 
+    // Serving duration
     private long duration;
+    // Serving result
     private Object result;
 
     public ServingResult(long duration, Object result){

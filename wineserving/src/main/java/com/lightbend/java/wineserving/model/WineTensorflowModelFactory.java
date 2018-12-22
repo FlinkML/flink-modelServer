@@ -24,18 +24,16 @@ import com.lightbend.model.ModelToServe;
 
 import java.util.Optional;
 
-/**
- * Created by boris on 7/15/17.
- */
-public class SpecificTensorflowModelFactory implements ModelFactory {
+// Tensorflow model factory for wine data
+public class WineTensorflowModelFactory implements ModelFactory {
 
-    private static SpecificTensorflowModelFactory instance = null;
+    private static WineTensorflowModelFactory instance = null;
 
     @Override
     public Optional<Model> create(ModelToServe descriptor) {
 
         try{
-            return Optional.of(new SpecificTensorflowModel(descriptor.getModelData()));
+            return Optional.of(new WineTensorflowModel(descriptor.getModelData()));
         }
         catch (Throwable t){
             System.out.println("Exception creating SpecificTensorflowModel from " + descriptor);
@@ -47,7 +45,7 @@ public class SpecificTensorflowModelFactory implements ModelFactory {
     @Override
     public Model restore(byte[] bytes) {
         try{
-            return new SpecificTensorflowModel(bytes);
+            return new WineTensorflowModel(bytes);
         }
         catch (Throwable t){
             System.out.println("Exception restoring PMMLModel from ");
@@ -58,7 +56,7 @@ public class SpecificTensorflowModelFactory implements ModelFactory {
 
     public static ModelFactory getInstance(){
         if(instance == null)
-            instance = new SpecificTensorflowModelFactory();
+            instance = new WineTensorflowModelFactory();
         return instance;
     }
 

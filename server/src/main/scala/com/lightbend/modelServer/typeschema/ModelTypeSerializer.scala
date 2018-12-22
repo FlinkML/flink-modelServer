@@ -27,6 +27,7 @@ import com.lightbend.modelServer.model.Model
 import org.apache.flink.core.memory.{DataInputView, DataOutputView}
 import org.apache.flink.util.InstantiationUtil
 
+// Type serializer for model
 class ModelTypeSerializer extends TypeSerializer[Option[Model]] {
 
 
@@ -101,7 +102,8 @@ object ModelSerializerConfigSnapshot{
   val CURRENT_VERSION = 2
 }
 
-
+// Snapshot configuration Model serializer
+// See https://github.com/apache/flink/blob/master/flink-core/src/main/java/org/apache/flink/api/common/typeutils/SimpleTypeSerializerSnapshot.java
 class ModelSerializerConfigSnapshot extends TypeSerializerSnapshot[Option[Model]]{
 
   import ModelSerializerConfigSnapshot._

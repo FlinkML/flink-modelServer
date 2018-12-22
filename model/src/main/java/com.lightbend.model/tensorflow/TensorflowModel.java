@@ -27,10 +27,14 @@ import com.lightbend.model.Modeldescriptor;
 import org.tensorflow.Graph;
 import org.tensorflow.Session;
 
+// Base Tensorflow processing
 public abstract class TensorflowModel implements Model {
+    // Tensorflow graph
     protected Graph graph = new Graph();
+    // Tensorflow session
     protected Session session;
 
+    // Constructor
     public TensorflowModel(byte[] inputStream) {
         graph.importGraphDef(inputStream);
         session = new Session(graph);

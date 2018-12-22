@@ -24,19 +24,17 @@ import com.lightbend.model.ModelToServe;
 
 import java.util.Optional;
 
-/**
- * Created by boris on 7/15/17.
- */
-public class SpecificPMMLModelFactory implements ModelFactory {
+// Wine data model factory
+public class WinePMMLModelFactory implements ModelFactory {
 
     private static ModelFactory instance = null;
 
-    private SpecificPMMLModelFactory(){}
+    private WinePMMLModelFactory(){}
 
     @Override
     public Optional<Model> create(ModelToServe descriptor) {
         try{
-            return Optional.of(new SpecificPMMLModel(descriptor.getModelData()));
+            return Optional.of(new WinePMMLModel(descriptor.getModelData()));
         }
         catch (Throwable t){
             System.out.println("Exception creating SpecificPMMLModel from " + descriptor);
@@ -48,7 +46,7 @@ public class SpecificPMMLModelFactory implements ModelFactory {
     @Override
     public Model restore(byte[] bytes) {
         try{
-            return new SpecificPMMLModel(bytes);
+            return new WinePMMLModel(bytes);
         }
         catch (Throwable t){
             System.out.println("Exception restoring SpecificPMMLModel from ");
@@ -59,7 +57,7 @@ public class SpecificPMMLModelFactory implements ModelFactory {
 
     public static ModelFactory getInstance(){
         if(instance == null)
-            instance = new SpecificPMMLModelFactory();
+            instance = new WinePMMLModelFactory();
         return instance;
     }
 }

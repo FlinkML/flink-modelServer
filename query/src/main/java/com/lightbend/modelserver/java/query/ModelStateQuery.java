@@ -34,13 +34,16 @@ import java.util.concurrent.CompletableFuture;
 
 public class ModelStateQuery{
 
+    // Timeout between invocations
     private static final int timeInterval = 1000 * 20;        // 20 sec
 
     public static void main(String[] args) throws Exception {
 
+        // Job ID, has to be active on the server
         JobID jobId = JobID.fromHexString("48aa41f575e99995ca74132de7331ad0");
+        // List of keys
         List<String> types = Arrays.asList("wine");
-
+        // Queryable client
         QueryableStateClient client = new QueryableStateClient("127.0.0.1", 9069);
 
         // the state descriptor of the state to be fetched.
@@ -49,12 +52,14 @@ public class ModelStateQuery{
                 TypeInformation.of(ModelToServeStats.class).createSerializer(new ExecutionConfig()) // type serializer
         );
 
+        // Key type
         BasicTypeInfo keyType = BasicTypeInfo.STRING_TYPE_INFO;
 
         System.out.println("                   Name                      |       Description       |       Since       |       Average       |       Min       |       Max       |");
 
         while(true) {
             for (String key : types) {
+                // For every key obtain a corresponding state
                 CompletableFuture<ValueState<ModelToServeStats>> future =
                         client.getKvState(jobId, "currentModelState", key, keyType, descriptor);
                 future.thenAccept(response -> {
@@ -68,6 +73,7 @@ public class ModelStateQuery{
                     }
                 });
             }
+            // Wait
             Thread.sleep(timeInterval);
         }
     }

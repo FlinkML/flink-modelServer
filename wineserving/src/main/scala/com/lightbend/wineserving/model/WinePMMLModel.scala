@@ -37,12 +37,16 @@ import org.jpmml.model.PMMLUtil
 import scala.collection.JavaConversions._
 import scala.collection._
 
+// PMML model implementation for wine data
+class WinePMMLModel(inputStream: Array[Byte]) extends PMMLModel(inputStream) {
 
-class SpecificPMMLModel(inputStream: Array[Byte]) extends PMMLModel(inputStream) {
-
+  // Scoring (using PMML evaluator)
   override def score(input: AnyVal): AnyVal = {
+    // Convert input
     val inputs = input.asInstanceOf[WineRecord]
+    // Clear arguments (from previous run)
     arguments.clear()
+    // Populate input based on record
     inputFields.foreach(field => {
       arguments.put(field.getName, field.prepare(getValueByName(inputs, field.getName.getValue)))
     })
@@ -57,25 +61,19 @@ class SpecificPMMLModel(inputStream: Array[Byte]) extends PMMLModel(inputStream)
     }
   }
 
+  // Support function to get values
   private def getValueByName(inputs : WineRecord, name: String) : Double =
-    SpecificPMMLModel.names.get(name) match {
+    WinePMMLModel.names.get(name) match {
     case Some(index) => {
      val v = inputs.getFieldByNumber(index + 1)
       v.asInstanceOf[Double]
     }
     case _ => .0
   }
-
-  override def toBytes : Array[Byte] = {
-    var stream = new ByteArrayOutputStream()
-    PMMLUtil.marshal(pmml, stream)
-    stream.toByteArray
-  }
-
-  override def getType: Long = ModelDescriptor.ModelType.PMML.value
 }
 
-object SpecificPMMLModel extends ModelFactory{
+// Factory for wine data PMML model
+object WinePMMLModel extends ModelFactory{
   private val names = Map("fixed acidity" -> 0,
     "volatile acidity" -> 1,"citric acid" ->2,"residual sugar" -> 3,
     "chlorides" -> 4,"free sulfur dioxide" -> 5,"total sulfur dioxide" -> 6,
@@ -83,11 +81,11 @@ object SpecificPMMLModel extends ModelFactory{
 
   override def create(input: ModelToServe): Option[Model] = {
     try {
-      Some(new SpecificPMMLModel(input.model))
+      Some(new WinePMMLModel(input.model))
     }catch{
       case t: Throwable => None
     }
   }
 
-  override def restore(bytes: Array[Byte]): Model = new SpecificPMMLModel(bytes)
+  override def restore(bytes: Array[Byte]): Model = new WinePMMLModel(bytes)
 }

@@ -25,6 +25,7 @@ import org.apache.flink.api.common.typeinfo.TypeInformation;
 
 import java.io.IOException;
 
+// ByteArray desirialization (used for Kafke)
 public class ByteArraySchema implements DeserializationSchema<byte[]>, SerializationSchema<byte[]> {
 
     private long serialVersionUID = 1234567L;

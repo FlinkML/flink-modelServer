@@ -1,18 +1,19 @@
 package com.lightbend.java.wineserving.model;
 
-import com.lightbend.model.ModelFacroriesResolverInterface;
+import com.lightbend.model.ModelFacroriesResolver;
 import com.lightbend.model.ModelFactory;
 import com.lightbend.model.Modeldescriptor;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class ModelFactoryResolver implements ModelFacroriesResolverInterface {
+// Factories resolver for Wine data
+public class WineFactoryResolver implements ModelFacroriesResolver {
 
     private static final Map<Integer, ModelFactory> factories = new HashMap<Integer, ModelFactory>() {
         {
-            put(Modeldescriptor.ModelDescriptor.ModelType.TENSORFLOW.getNumber(), SpecificTensorflowModelFactory.getInstance());
-            put(Modeldescriptor.ModelDescriptor.ModelType.PMML.getNumber(), SpecificPMMLModelFactory.getInstance());
+            put(Modeldescriptor.ModelDescriptor.ModelType.TENSORFLOW.getNumber(), WineTensorflowModelFactory.getInstance());
+            put(Modeldescriptor.ModelDescriptor.ModelType.PMML.getNumber(), WinePMMLModelFactory.getInstance());
         }
     };
 

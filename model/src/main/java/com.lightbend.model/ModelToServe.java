@@ -20,18 +20,23 @@ package com.lightbend.model;
 
 import java.io.Serializable;
 
-/**
- * Created by boris on 6/28/17.
- */
+// Intermediate format for model representation
 public class ModelToServe implements Serializable {
 
+    // Name
     private String name;
+    // Description
     private String description;
+    // Model type
     private Modeldescriptor.ModelDescriptor.ModelType modelType;
+    // Binary representation
     private byte[] modelData;
+    // Model data location
     private String modelDataLocation;
+    // Data type
     private String dataType;
 
+    // Constractor
     public ModelToServe(String name, String description, Modeldescriptor.ModelDescriptor.ModelType modelType,
                         byte[] dataContent, String modelDataLocation, String dataType){
         this.name = name;
@@ -42,6 +47,7 @@ public class ModelToServe implements Serializable {
         this.dataType = dataType;
     }
 
+    // Getters
     public String getName() {
         return name;
     }
@@ -61,8 +67,6 @@ public class ModelToServe implements Serializable {
     public byte[] getModelData() {
         return modelData;
     }
-
-    public String getModelDataLocation() { return modelDataLocation; }
 
     @Override
     public String toString() {

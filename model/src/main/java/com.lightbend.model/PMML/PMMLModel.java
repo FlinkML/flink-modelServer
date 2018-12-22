@@ -35,16 +35,19 @@ import java.io.ByteArrayOutputStream;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * Created by boris on 5/18/17.
- */
+// Base PMML processing
 public abstract class PMMLModel implements Model {
 
+    // List of optimizerss
     private static List<? extends Visitor> optimizers = Arrays.asList(new ExpressionOptimizer(), new FieldOptimizer(), new PredicateOptimizer(), new GeneralRegressionModelOptimizer(), new NaiveBayesModelOptimizer(), new RegressionModelOptimizer());
 
+    // PMML model
     protected PMML pmml;
+    // PMML Evaluator
     protected Evaluator evaluator;
+    // Result field name
     protected FieldName tname;
+    // Input fields names
     protected List<InputField> inputFields;
 
     public PMMLModel(byte[] input) throws Throwable{

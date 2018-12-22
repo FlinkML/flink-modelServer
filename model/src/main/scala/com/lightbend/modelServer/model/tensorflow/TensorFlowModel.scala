@@ -22,18 +22,18 @@ import com.lightbend.model.modeldescriptor.ModelDescriptor
 import com.lightbend.modelServer.model.Model
 import org.tensorflow.{Graph, Session}
 
-/**
-  * Created by boris on 5/26/17.
-  * Implementation of tensorflow model
-  */
+// Abstract class for any Tensorflow (optimized export) model processing. It has to be extended by the user
+// implement score method, based on his own model
 
 abstract class TensorFlowModel(inputStream : Array[Byte]) extends Model(inputStream){
 
+  // Model graph
   val graph = new Graph
   graph.importGraphDef(inputStream)
+  // Create tensorflow session
   val session = new Session(graph)
 
-
+  // Cleanup
   override def cleanup(): Unit = {
     try{
       session.close
@@ -47,7 +47,9 @@ abstract class TensorFlowModel(inputStream : Array[Byte]) extends Model(inputStr
     }
   }
 
+  // Convert tensorflow model to bytes
   override def toBytes(): Array[Byte] = graph.toGraphDef
 
+  // Get model type
   override def getType: Long = ModelDescriptor.ModelType.TENSORFLOW.value
 }

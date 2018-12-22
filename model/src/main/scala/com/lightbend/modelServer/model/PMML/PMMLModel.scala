@@ -18,12 +18,6 @@
 
 package com.lightbend.modelServer.model.PMML
 
-/**
-  * Created by boris on 5/9/17.
-  *
-  * Class for PMML model
-  */
-
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 
 import com.lightbend.model.modeldescriptor.ModelDescriptor
@@ -35,7 +29,8 @@ import org.jpmml.model.PMMLUtil
 
 import scala.collection._
 
-
+// Abstract class for any PMML model processing. It has to be extended by the user
+// implement score method, based on his own model
 abstract class PMMLModel(inputStream: Array[Byte]) extends Model(inputStream) {
 
   var arguments = mutable.Map[FieldName, FieldValue]()
@@ -68,7 +63,10 @@ abstract class PMMLModel(inputStream: Array[Byte]) extends Model(inputStream) {
 
 object PMMLModelBase{
 
+  // List of PMML optimizers (https://groups.google.com/forum/#!topic/jpmml/rUpv8hOuS3A)
   private val optimizers = Array(new ExpressionOptimizer, new FieldOptimizer, new PredicateOptimizer, new GeneralRegressionModelOptimizer, new NaiveBayesModelOptimizer, new RegressionModelOptimizer)
+
+  // OPtimize PMML model
   def optimize(pmml : PMML) = this.synchronized {
     optimizers.foreach(opt =>
       try {

@@ -20,18 +20,23 @@ package com.lightbend.modelServer
 
 import scala.util.Try
 import com.lightbend.model.modeldescriptor.ModelDescriptor
-import com.lightbend.modelServer.model.{Model, ModelFactoryResolverTrait}
+import com.lightbend.modelServer.model.{Model, ModelFactoryResolver}
 
 /**
   * Created by boris on 5/8/17.
   */
 object ModelToServe {
 
-  private var resolver : ModelFactoryResolverTrait = _
+  // Model Factory resolver
+  private var resolver : ModelFactoryResolver = _
 
-  def setResolver(res : ModelFactoryResolverTrait) : Unit = resolver = res
+  // This method has to be invoked before execution starts
+  def setResolver(res : ModelFactoryResolver) : Unit = resolver = res
 
+  // Convert to String
   override def toString: String = super.toString
+
+  // Get the model from byte array
   def fromByteArray(message: Array[Byte]): Try[ModelToServe] = Try{
     val m = ModelDescriptor.parseFrom(message)
     m.messageContent.isData match {
@@ -40,30 +45,49 @@ object ModelToServe {
     }
   }
 
-  def copy(from: Option[Model]): Option[Model] =
+  // Deep copy the model
+  def copy(from: Option[Model]): Option[Model] = {
+    validateResolver()
     from match {
-      case Some(model) => Some(resolver.getFactory(model.getType.asInstanceOf[Int]).get.restore(model.toBytes()))
+      case Some(model) =>
+        validateResolver()
+        Some(resolver.getFactory(model.getType.asInstanceOf[Int]).get.restore(model.toBytes()))
       case _ => None
     }
+  }
 
-  def restore(t : Int, content : Array[Byte]): Option[Model] = Some(resolver.getFactory(t).get.restore(content))
+  // Restore model from byte array
+  def restore(t : Int, content : Array[Byte]): Option[Model] = {
+    validateResolver()
+    Some(resolver.getFactory(t).get.restore(content))
+  }
 
-  def toModel(model: ModelToServe): Option[Model] =
+  // Get the model from ModelToServe
+  def toModel(model: ModelToServe): Option[Model] = {
+    validateResolver()
     resolver.getFactory(model.modelType.value) match {
-      case Some(factory) => factory.create (model)
+      case Some(factory) => factory.create(model)
       case _ => None
     }
+  }
+
+  // Ensure that resolver is set
+  private def validateResolver() : Unit = if(resolver == null) throw new Exception("Model factory resolver is not set")
 }
 
+// Model to serve definition
 case class ModelToServe(name: String, description: String,
                         modelType: ModelDescriptor.ModelType,
                         model : Array[Byte], dataType : String) {}
 
+// Model serving statistics definition
 case class ModelToServeStats(name: String = "", description: String = "",
                              modelType: ModelDescriptor.ModelType = ModelDescriptor.ModelType.PMML,
                              since : Long = 0, var usage : Long = 0, var duration : Double = .0,
                              var min : Long = Long.MaxValue, var max : Long = Long.MinValue){
   def this(m : ModelToServe) = this(m.name, m.description, m.modelType, System.currentTimeMillis())
+
+  // Increment model serving statistics invoked for every processing
   def incrementUsage(execution : Long) : ModelToServeStats = {
     usage = usage + 1
     duration = duration + execution
@@ -73,6 +97,8 @@ case class ModelToServeStats(name: String = "", description: String = "",
   }
 }
 
+// Used for checkpointing
 case class ModelWithType(isCurrent : Boolean, dataType: String, model: Option[Model])
 
+// Model serving result definition
 case class ServingResult(duration : Long, result: AnyVal)

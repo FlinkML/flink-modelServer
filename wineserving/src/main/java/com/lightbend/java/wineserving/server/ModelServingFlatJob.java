@@ -22,7 +22,7 @@ import com.lightbend.kafka.configuration.java.ModelServingConfiguration;
 import com.lightbend.model.DataConverter;
 import com.lightbend.model.DataToServe;
 import com.lightbend.model.ModelToServe;
-import com.lightbend.java.wineserving.model.ModelFactoryResolver;
+import com.lightbend.java.wineserving.model.WineFactoryResolver;
 import com.lightbend.modelserver.java.partitioned.DataProcessorMap;
 import com.lightbend.modelserver.java.typeschema.ByteArraySchema;
 import org.apache.flink.api.common.typeinfo.PrimitiveArrayTypeInfo;
@@ -142,7 +142,7 @@ public class ModelServingFlatJob {
         DataStream<byte[]> dataStream = env.addSource(dataConsumer, PrimitiveArrayTypeInfo.BYTE_PRIMITIVE_ARRAY_TYPE_INFO);
 
         // Set DataConverter
-        DataConverter.setResolver(new ModelFactoryResolver());
+        DataConverter.setResolver(new WineFactoryResolver());
 
         // Read data from streams
         DataStream<ModelToServe> models = modelsStream

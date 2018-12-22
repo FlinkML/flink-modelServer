@@ -27,6 +27,7 @@ import org.apache.flink.core.memory.DataOutputView;
 
 import java.io.IOException;
 
+// Type serializer for model
 public class ModelTypeSerializer extends TypeSerializer<Model> {
 
     @Override public Model createInstance() { return null; }

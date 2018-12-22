@@ -26,7 +26,7 @@ object Dependencies {
   val flinkKafka            = "org.apache.flink"    %% "flink-connector-kafka"              % flinkVersion
   val flinkQueryableRuntime = "org.apache.flink"    %% "flink-queryable-state-runtime"      % flinkVersion
   val flinkQueryableClient  = "org.apache.flink"    %% "flink-queryable-state-client-java"  % flinkVersion
-  val kafka                 = "org.apache.kafka"    % "kafka_2.11"                          % kafkaVersion
+  val kafka                 = "org.apache.kafka"    %% "kafka"                              % kafkaVersion
   val tensorflow            = "org.tensorflow"      % "tensorflow"                          % tensorflowVersion
   val PMMLEvaluator         = "org.jpmml"           % "pmml-evaluator"                      % PMMLVersion
   val PMMLExtensions        = "org.jpmml"           % "pmml-evaluator-extension"            % PMMLVersion

@@ -5,6 +5,7 @@ import com.lightbend.model.Winerecord;
 
 import java.util.Optional;
 
+// Container for wine data
 public class DataRecord implements DataToServe {
 
     private Winerecord.WineRecord record;

@@ -45,52 +45,67 @@ class DataProcessorKeyed extends CoProcessFunction[DataToServe, ModelToServe, Se
   // https://ci.apache.org/projects/flink/flink-docs-release-1.6/dev/stream/state/state.html#keyed-state-and-operator-state
   // As a result, any key specific sate data has to be in the key specific state
 
+  // current model state
   var modelState: ValueState[ModelToServeStats] = _
+  // New model state
   var newModelState: ValueState[ModelToServeStats] = _
 
+  // Current model
   var currentModel : ValueState[Option[Model]] = _
+  // New model
   var newModel : ValueState[Option[Model]] = _
 
-  @transient private var checkpointedState: ListState[Option[Model]] = null
-
+  // Called when an instance is created
   override def open(parameters: Configuration): Unit = {
 
+    // Model state descriptor
     val modelStateDesc = new ValueStateDescriptor[ModelToServeStats](
-      "currentModelState",                  // state name
-      createTypeInformation[ModelToServeStats])     // type information
-    modelStateDesc.setQueryable("currentModelState")     // Expose it for queryable state
+      "currentModelState",                        // state name
+      createTypeInformation[ModelToServeStats])           // type information
+    modelStateDesc.setQueryable("currentModelState")      // Expose it for queryable state
+    // Create Model state
     modelState = getRuntimeContext.getState(modelStateDesc)
+    // New Model state descriptor
     val newModelStateDesc = new ValueStateDescriptor[ModelToServeStats](
-      "newModelState",                      // state name
-      createTypeInformation[ModelToServeStats])     // type information
+      "newModelState",                             // state name
+      createTypeInformation[ModelToServeStats])            // type information
+    // Create new model state
     newModelState = getRuntimeContext.getState(newModelStateDesc)
+    // Model descriptor
     val modelDesc = new ValueStateDescriptor[Option[Model]](
       "currentModel",                               // state name
-      new ModelTypeSerializer)                      // type information
+      new ModelTypeSerializer)                              // type information
+    // Create current model state
     currentModel = getRuntimeContext.getState(modelDesc)
+    // New model state descriptor
     val newModelDesc = new ValueStateDescriptor[Option[Model]](
-      "newModel",                                   // state name
-      new ModelTypeSerializer)                       // type information
+      "newModel",                                    // state name
+      new ModelTypeSerializer)                               // type information
+    // Create new model state
     newModel = getRuntimeContext.getState(newModelDesc)
   }
 
-
+  // Process new model
   override def processElement2(model: ModelToServe, ctx: CoProcessFunction[DataToServe, ModelToServe, ServingResult]#Context, out: Collector[ServingResult]): Unit = {
 
+    // Ensure that the state is initialized
     if(newModel.value == null) newModel.update(None)
     if(currentModel.value == null) currentModel.update(None)
 
     println(s"New model - $model")
+    // Create a model
     ModelToServe.toModel(model) match {
       case Some(md) =>
-        newModel.update (Some(md))
-        newModelState.update (new ModelToServeStats (model))
-      case _ =>
+        newModel.update (Some(md))                            // Create a new model
+        newModelState.update (new ModelToServeStats (model))  // Create a new model state
+      case _ =>   // Model creation failed, continue
     }
   }
 
+  // Serve data
   override def processElement1(record: DataToServe, ctx: CoProcessFunction[DataToServe, ModelToServe, ServingResult]#Context, out: Collector[ServingResult]): Unit = {
 
+    // Ensure that the state is initialized
     if(newModel.value == null) newModel.update(None)
     if(currentModel.value == null) currentModel.update(None)
     // See if we have update for the model
@@ -107,9 +122,12 @@ class DataProcessorKeyed extends CoProcessFunction[DataToServe, ModelToServe, Se
     currentModel.value match {
       case Some(model) => {
         val start = System.currentTimeMillis()
+        // Actually serve
         val result = model.score(record.getRecord)
         val duration = System.currentTimeMillis() - start
+        // Update state
         modelState.update(modelState.value().incrementUsage(duration))
+        // Write result out
         out.collect(ServingResult(duration, result))
       }
       case _ =>

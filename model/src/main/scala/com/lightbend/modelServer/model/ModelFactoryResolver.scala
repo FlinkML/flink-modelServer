@@ -1,6 +1,6 @@
 package com.lightbend.modelServer.model
 
-
-trait ModelFactoryResolverTrait {
+// Generic definition of model factory resolver
+trait ModelFactoryResolver {
   def getFactory(`type` : Int) : Option[ModelFactory]
 }

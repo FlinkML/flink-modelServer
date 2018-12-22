@@ -27,6 +27,7 @@ object BadDataHandler {
   def apply[T] = new BadDataHandler[T]
 }
 
+// Data handler for failed data transformation
 class BadDataHandler[T] extends FlatMapFunction[Try[T], T] {
   override def flatMap(t: Try[T], out: Collector[T]): Unit = {
     t match {

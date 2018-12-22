@@ -21,10 +21,7 @@ package com.lightbend.model;
 
 import java.io.Serializable;
 
-/**
- * Created by boris on 5/9/17.
- * Basic trait for model
- */
+// Base interface for Model
 public interface Model extends Serializable {
     Object score(Object input);
     void cleanup();

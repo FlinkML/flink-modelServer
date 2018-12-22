@@ -7,7 +7,7 @@ import com.lightbend.modelServer.ModelToServe
 import com.lightbend.modelServer.model.DataToServe
 import com.lightbend.modelServer.partitioned.DataProcessorMap
 import com.lightbend.modelServer.typeschema.ByteArraySchema
-import com.lightbend.wineserving.model.ModeFactoryResolver
+import com.lightbend.wineserving.model.WineFactoryResolver
 import org.apache.flink.configuration.{Configuration, JobManagerOptions, TaskManagerOptions}
 import org.apache.flink.runtime.concurrent.Executors
 import org.apache.flink.runtime.highavailability.HighAvailabilityServicesUtils
@@ -124,12 +124,13 @@ object ModelServingFlatJob {
     val dataStream = env.addSource(dataConsumer)
 
     // Set modelToServe
-    ModelToServe.setResolver(ModeFactoryResolver)
+    ModelToServe.setResolver(WineFactoryResolver)
 
-    // Read data from streams
+    // Read models from streams
     val models = modelsStream.map(ModelToServe.fromByteArray(_))
       .flatMap(BadDataHandler[ModelToServe])
       .broadcast
+    // Read data from streams
     val data = dataStream.map(DataRecord.fromByteArray(_))
       .flatMap(BadDataHandler[DataRecord]).map(_.asInstanceOf[DataToServe])
 

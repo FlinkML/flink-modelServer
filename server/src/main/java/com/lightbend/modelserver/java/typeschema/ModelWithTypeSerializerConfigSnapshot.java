@@ -28,9 +28,11 @@ import org.apache.flink.util.InstantiationUtil;
 
 import java.io.IOException;
 
+// Snapshot configuration for model with type serializer
+// See https://github.com/apache/flink/blob/master/flink-core/src/main/java/org/apache/flink/api/common/typeutils/SimpleTypeSerializerSnapshot.java
 public class ModelWithTypeSerializerConfigSnapshot extends SimpleTypeSerializerSnapshot<ModelWithType> {
 
-    private static final int VERSION = 2;
+    private static final int VERSION = 1;
 
     private Class<ModelWithTypeSerializer> serializerClass = ModelWithTypeSerializer.class;
 

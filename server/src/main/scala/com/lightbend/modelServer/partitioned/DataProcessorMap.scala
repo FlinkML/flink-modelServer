@@ -42,58 +42,74 @@ object DataProcessorMap{
 
 class DataProcessorMap extends RichCoFlatMapFunction[DataToServe, ModelToServe, ServingResult] with CheckpointedFunction {
 
+  // Current models
   private var currentModels = Map[String, Model]()
+  // New models
   private var newModels = Map[String, Model]()
 
+  // Checkpointing state
   @transient private var checkpointedState: ListState[ModelWithType] = _
 
+  // Create a snapshot
   override def snapshotState(context: FunctionSnapshotContext): Unit = {
+    // Clear checkpointing state
     checkpointedState.clear()
+    // Populate checkpointing state
     currentModels.foreach(entry => checkpointedState.add(ModelWithType(true, entry._1, Some(entry._2))))
     newModels.foreach(entry => checkpointedState.add(ModelWithType(false, entry._1, Some(entry._2))))
   }
 
+  // Restore checkpoint
   override def initializeState(context: FunctionInitializationContext): Unit = {
+    // Checkpointing descriptor
     val checkPointDescriptor = new ListStateDescriptor[ModelWithType] (
         "modelState",
         new ModelWithTypeSerializer)
+    // Get checkpointing data
     checkpointedState = context.getOperatorStateStore.getListState (checkPointDescriptor)
 
+    // If restored
     if (context.isRestored) {
+      // Create state
       val nm = new ListBuffer[(String, Model)]()
       val cm = new ListBuffer[(String, Model)]()
       checkpointedState.get().iterator().asScala.foreach(modelWithType => {
+        // For each model in the checkpointed state
         modelWithType.model match {
-          case Some(model) =>
+          case Some(model) =>                     // Model is present
             modelWithType.isCurrent match {
-              case true => cm += (modelWithType.dataType -> model)
-              case _ => nm += (modelWithType.dataType -> model)
+              case true => cm += (modelWithType.dataType -> model)  // Its a current model
+              case _ => nm += (modelWithType.dataType -> model)     // Its a new model
             }
           case _ =>
         }
       })
+      // Convert lists into maps
       currentModels = Map(cm: _*)
       newModels = Map(nm: _*)
     }
   }
 
+  // Process new model
   override def flatMap2(model: ModelToServe, out: Collector[ServingResult]): Unit = {
 
     println(s"New model - $model")
-    ModelToServe.toModel(model) match {
-      case Some(md) => newModels += (model.dataType -> md)
+    ModelToServe.toModel(model) match {                     // Inflate model
+      case Some(md) => newModels += (model.dataType -> md)  // Save a new model
       case _ =>
     }
   }
 
+  // Serve data
   override def flatMap1(record: DataToServe, out: Collector[ServingResult]): Unit = {
     // See if we need to update
-    newModels.contains(record.getType) match {
+    newModels.contains(record.getType) match {    // There is a new model for this type
       case true =>
-        currentModels.contains(record.getType) match {
-          case true => currentModels(record.getType).cleanup()
+        currentModels.contains(record.getType) match {  // There is currently a model for this type
+          case true => currentModels(record.getType).cleanup()  // Cleanup
           case _ =>
         }
+        // Update current models and remove a model from new models
         currentModels += (record.getType -> newModels(record.getType))
         newModels -= record.getType
       case _ =>
@@ -102,8 +118,10 @@ class DataProcessorMap extends RichCoFlatMapFunction[DataToServe, ModelToServe, 
     currentModels.contains(record.getType) match {
       case true =>
         val start = System.currentTimeMillis()
+        // Actual serving
         val result = currentModels(record.getType).score(record.getRecord)
         val duration = System.currentTimeMillis() - start
+        // write result out
         out.collect(ServingResult(duration, result))
       case _ =>
     }

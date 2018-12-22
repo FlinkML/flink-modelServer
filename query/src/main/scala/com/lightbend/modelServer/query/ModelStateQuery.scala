@@ -32,13 +32,17 @@ import org.joda.time.DateTime
   */
 object ModelStateQuery {
 
+  // Timeout between queries
   val timeInterval = 1000 * 20        // 20 sec
 
   def main(args: Array[String]) {
 
+    // JobID, has to correspond to a running job
     val jobId = JobID.fromHexString("7a380986efe2d415bf77cb09ef2cbb1b")
+    // List of keys
     val types = Array("wine")
 
+    // Client
     val client = new QueryableStateClient("127.0.0.1", 9069)
 
     // the state descriptor of the state to be fetched.
@@ -46,12 +50,15 @@ object ModelStateQuery {
       "currentModel",   // state name
       createTypeInformation[ModelToServeStats].createSerializer(new ExecutionConfig) // type serializer
     )
+    // Key type
     val keyType = BasicTypeInfo.STRING_TYPE_INFO
 
     println("                   Name                      |       Description       |       Since       |       Average       |       Min       |       Max       |")
     while(true) {
       for (key <- types) {
+        // For every key
         try {
+          // Get statistics
           val future = client.getKvState(jobId, "currentModelState", key, keyType, descriptor)
           val stats = future.join().value()
           println(s" ${stats.name} | ${stats.description} | ${new DateTime(stats.since).toString("yyyy/MM/dd HH:MM:SS")} | ${stats.duration/stats.usage} |" +
@@ -59,6 +66,7 @@ object ModelStateQuery {
         }
         catch {case e: Exception => e.printStackTrace()}
       }
+      // Wait for next
       Thread.sleep(timeInterval)
     }
   }

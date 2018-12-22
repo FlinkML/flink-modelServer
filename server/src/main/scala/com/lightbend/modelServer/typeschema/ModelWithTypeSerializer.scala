@@ -7,6 +7,7 @@ import org.apache.flink.api.common.typeutils._
 import org.apache.flink.core.memory.{DataInputView, DataOutputView}
 import org.apache.flink.util.InstantiationUtil
 
+// Serializer for Model with State
 class ModelWithTypeSerializer extends TypeSerializer[ModelWithType] {
 
   override def createInstance(): ModelWithType = ModelWithType(false, "", None)
@@ -88,7 +89,8 @@ object ModelWithTypeSerializerConfigSnapshot{
   val CURRENT_VERSION = 2
 }
 
-
+// Snapshot configuration for Model with type serializer
+// See https://github.com/apache/flink/blob/master/flink-core/src/main/java/org/apache/flink/api/common/typeutils/SimpleTypeSerializerSnapshot.java
 class ModelWithTypeSerializerConfigSnapshot extends SimpleTypeSerializerSnapshot[ModelWithType]{
 
   import ModelWithTypeSerializerConfigSnapshot._

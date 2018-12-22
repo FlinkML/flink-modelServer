@@ -22,19 +22,29 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.util.Optional;
 
-/**
- * Created by boris on 6/28/17.
- */
+// Data converter - collection of static methods for data transformation
 public class DataConverter {
 
-    private static ModelFacroriesResolverInterface resolver = null;
+    // Model factories converter
+    private static ModelFacroriesResolver resolver = null;
 
     private DataConverter(){}
 
-    public static void setResolver(ModelFacroriesResolverInterface res){
+    // Setting Model factories converter. Has to be invoked by the user at the beginning of his code
+    public static void setResolver(ModelFacroriesResolver res){
         resolver = res;
     }
 
+    // Validating that resolver is set
+    private static boolean validateResolver() {
+        if(resolver == null) {
+            System.out.println("Model factories resolver is not set");
+            return false;
+        }
+        return true;
+    }
+
+    // Convert byte array to ModelToServe
     public static Optional<ModelToServe> convertModel(byte[] binary){
         try {
             // Unmarshall record
@@ -57,8 +67,10 @@ public class DataConverter {
         }
     }
 
+    // Read model from byte array
     public static Optional<Model> readModel(DataInputStream input) {
-
+        if(!validateResolver())
+            return Optional.empty();
         try {
             int length = (int)input.readLong();
             if (length == 0)
@@ -75,6 +87,7 @@ public class DataConverter {
         }
     }
 
+    // Write model to data stream
     public static void writeModel(Model model, DataOutputStream output){
         try{
             if(model == null){
@@ -92,8 +105,10 @@ public class DataConverter {
         }
     }
 
+    // Deep copy of model
     public static Model copy(Model model) {
-
+        if(!validateResolver())
+            return null;
         if (model == null)
             return null;
         else {
@@ -104,14 +119,20 @@ public class DataConverter {
         }
      }
 
+    // Restore model from byte
     public static Model restore(int t, byte[] content){
+        if(!validateResolver())
+            return null;
         ModelFactory factory = resolver.getFactory(t);
         if(factory != null)
             return factory.restore(content);
         return null;
     }
 
+    // Convert ModelToServe to Model
     public static Optional<Model> toModel(ModelToServe model){
+        if(!validateResolver())
+            return Optional.empty();
         ModelFactory factory = resolver.getFactory(model.getModelType().getNumber());
         if (factory != null)
             return factory.create(model);

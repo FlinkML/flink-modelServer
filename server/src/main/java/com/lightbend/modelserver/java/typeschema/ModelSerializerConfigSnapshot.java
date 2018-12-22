@@ -28,12 +28,15 @@ import org.apache.flink.util.InstantiationUtil;
 
 import java.io.IOException;
 
+// Type serializer snapshot for model
+// See https://github.com/apache/flink/blob/master/flink-core/src/main/java/org/apache/flink/api/common/typeutils/SimpleTypeSerializerSnapshot.java
 public class ModelSerializerConfigSnapshot extends SimpleTypeSerializerSnapshot<Model> {
 
-    private static final int VERSION = 2;
+    // Version
+    private static final int VERSION = 1;
 
-     private Class<ModelTypeSerializer> serializerClass = ModelTypeSerializer.class;
-
+    // Serializer
+    private Class<ModelTypeSerializer> serializerClass = ModelTypeSerializer.class;
 
     @Override
     public int getCurrentVersion() {

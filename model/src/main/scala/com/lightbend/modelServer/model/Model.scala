@@ -18,10 +18,7 @@
 
 package com.lightbend.modelServer.model
 
-/**
-  * Created by boris on 5/9/17.
-  * Basic trait for model
-  */
+// Generic definition of the model
 abstract class Model(inputStream : Array[Byte]) {
   def score(input : AnyVal) : AnyVal
   def cleanup() : Unit
