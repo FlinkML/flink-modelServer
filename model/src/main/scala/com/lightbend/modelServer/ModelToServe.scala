@@ -118,8 +118,5 @@ case class ModelToServeStats(name: String = "", description: String = "",
   }
 }
 
-// Used for checkpointing
-case class ModelWithType(isCurrent : Boolean, dataType: String, model: Option[Model])
-
 // Model serving result definition
 case class ServingResult(duration : Long, result: AnyVal)

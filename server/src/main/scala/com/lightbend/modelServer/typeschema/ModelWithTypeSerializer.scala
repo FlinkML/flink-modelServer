@@ -10,7 +10,7 @@ import org.apache.flink.util.InstantiationUtil
 // Serializer for Model with State
 class ModelWithTypeSerializer extends TypeSerializer[ModelWithType] {
 
-  override def createInstance(): ModelWithType = ModelWithType(false, "", None)
+  override def createInstance(): ModelWithType = new ModelWithType(false, "", None)
 
   override def canEqual(obj: scala.Any): Boolean = obj.isInstanceOf[ModelWithTypeSerializer]
 
@@ -37,7 +37,7 @@ class ModelWithTypeSerializer extends TypeSerializer[ModelWithType] {
   override def snapshotConfiguration(): TypeSerializerSnapshot[ModelWithType] = new ModelWithTypeSerializerConfigSnapshot
 
   override def copy(from: ModelWithType): ModelWithType =
-    ModelWithType(from.isCurrent, from.dataType, ModelToServe.copy(from.model))
+    new ModelWithType(from.isCurrent, from.dataType, ModelToServe.copy(from.model))
 
   override def copy(from: ModelWithType, reuse: ModelWithType): ModelWithType = copy(from)
 
@@ -67,8 +67,8 @@ class ModelWithTypeSerializer extends TypeSerializer[ModelWithType] {
         val size = source.readLong().asInstanceOf[Int]
         val content = new Array[Byte](size)
         source.read(content)
-        ModelWithType(current, dataType, ModelToServe.restore(t, content))
-      case _ => ModelWithType(current, dataType, None)
+        new ModelWithType(current, dataType, ModelToServe.restore(t, content))
+      case _ => new ModelWithType(current, dataType, None)
     }
   }
 
@@ -105,7 +105,7 @@ class ModelWithTypeSerializerConfigSnapshot extends SimpleTypeSerializerSnapshot
 
   override def readSnapshot(readVersion: Int, in: DataInputView, classLoader: ClassLoader): Unit = {
     readVersion match {
-      case 1 =>
+      case CURRENT_VERSION =>
         val className = in.readUTF
         resolveClassName(className, classLoader, false)
        case _ =>

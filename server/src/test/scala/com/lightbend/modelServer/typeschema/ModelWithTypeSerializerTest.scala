@@ -5,8 +5,9 @@ import java.nio.file.{Files, Paths}
 
 import com.lighbend.modelServer.SimpleFactoryResolver
 import com.lightbend.model.Modeldescriptor.ModelDescriptor
+import org.apache.flink.api.common.typeutils.TypeSerializer
 import com.lightbend.modelServer.{ModelToServe, ModelWithType}
-import org.apache.flink.api.common.typeutils.{SerializerTestBase, TypeSerializer}
+import com.lightbend.modelserver.java.typeschema.SerializerTestBase
 
 class ModelWithTypeSerializerTest extends SerializerTestBase[ModelWithType]{
 
@@ -40,7 +41,7 @@ class ModelWithTypeSerializerTest extends SerializerTestBase[ModelWithType]{
     // Create model from location
     val tfbundled = ModelToServe.restore(ModelDescriptor.ModelType.TENSORFLOWSAVED.getNumber, location.getBytes)
 
-    Array[ModelWithType](ModelWithType(false, dataType, pmml), ModelWithType(false, dataType, tfoptimized), ModelWithType(false, dataType, tfbundled))
+    Array[ModelWithType](new ModelWithType(false, dataType, pmml), new ModelWithType(false, dataType, tfoptimized), new ModelWithType(false, dataType, tfbundled))
   }
 
   private def getModel(fileName: String) : Array[Byte] = {

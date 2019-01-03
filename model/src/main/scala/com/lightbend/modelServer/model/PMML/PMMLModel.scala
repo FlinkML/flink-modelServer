@@ -52,13 +52,17 @@ abstract class PMMLModel(inputStream: Array[Byte]) extends Model {
 
   override def cleanup(): Unit = {}
 
-  override def toBytes : Array[Byte] = {
-    var stream = new ByteArrayOutputStream()
-    PMMLUtil.marshal(pmml, stream)
-    stream.toByteArray
-  }
+  override def toBytes : Array[Byte] = inputStream
 
   override def getType: Long = ModelDescriptor.ModelType.PMML.value
+
+  override def equals(obj: Any): Boolean = {
+    obj match {
+      case pmmlModel: PMMLModel =>
+        pmmlModel.toBytes.toList == inputStream.toList
+      case _ => false
+    }
+  }
 }
 
 object PMMLModelBase{

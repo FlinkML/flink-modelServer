@@ -52,4 +52,12 @@ abstract class TensorFlowModel(inputStream : Array[Byte]) extends Model {
 
   // Get model type
   override def getType: Long = ModelDescriptor.ModelType.TENSORFLOW.value
+
+  override def equals(obj: Any): Boolean = {
+    obj match {
+      case tfModel: TensorFlowModel =>
+        tfModel.toBytes.toList == inputStream.toList
+      case _ => false
+    }
+  }
 }

@@ -65,12 +65,11 @@ class ModelToServeTest {
     // Build PMML model
     val pmml = ModelToServe.toModel(result.get)
     // Validate
-    assertTrue(pmml.isDefined)
+    assertTrue("PMML Model created", pmml.isDefined)
     valdatePMMLModel(pmml.get)
     // Simply copy the model
     val copyDirect = ModelToServe.copy(pmml)
-    assertNotEquals(pmml.get, copyDirect)
-    valdatePMMLModel(copyDirect.get)
+    assertEquals("Copy equal to source", pmml.get, copyDirect.get)
     // Create model from binary
     val direct = ModelToServe.restore(ModelDescriptor.ModelType.PMML.value, model)
     // Validate it
@@ -89,12 +88,11 @@ class ModelToServeTest {
     // Build TF model
     val tf = ModelToServe.toModel(result.get)
     // Validate
-    assertTrue(tf.isDefined)
+    assertTrue("TF Model created correctly", tf.isDefined)
     valdateTFModel(tf.get)
     // Simply copy the model
     val copyDirect = ModelToServe.copy(tf)
-    assertNotEquals(tf.get, copyDirect)
-    valdateTFModel(copyDirect.get)
+    assertEquals("Copy equal to source", tf.get, copyDirect.get)
     // Create model from binary
     val direct = ModelToServe.restore(ModelDescriptor.ModelType.TENSORFLOW.value, model)
     // Validate it
@@ -117,14 +115,13 @@ class ModelToServeTest {
     val tf = ModelToServe.toModel(result.get)
 
     // Validate
-    assertTrue(tf.isDefined)
+    assertTrue("TF Model created correctly",tf.isDefined)
     valdateTFBundleModel(tf.get)
 
     // Simply copy the model
     val copyDirect = ModelToServe.copy(tf)
 
-    assertNotEquals(tf.get, copyDirect)
-    valdateTFBundleModel(copyDirect.get)
+    assertEquals("Copy equal to source", tf.get, copyDirect.get)
 
     // Create model from binary
     val direct = ModelToServe.restore(ModelDescriptor.ModelType.TENSORFLOWSAVED.value, model.getBytes)
@@ -137,61 +134,61 @@ class ModelToServeTest {
     private def valdatePMMLModel(pmml: Model): Unit = {
     assertTrue(pmml.isInstanceOf[SimplePMMLModel])
     val pmmlModel = pmml.asInstanceOf[SimplePMMLModel]
-    assertNotEquals(null, pmmlModel.getPmml)
-    assertNotEquals(null, pmmlModel.getEvaluator)
-    assertEquals("quality", pmmlModel.getTname.toString)
+    assertNotEquals("PMML build",null, pmmlModel.getPmml)
+    assertNotEquals("PMML evaluator created", null, pmmlModel.getEvaluator)
+    assertEquals("Output name is correct", "quality", pmmlModel.getTname.toString)
     val inputsIterator = pmmlModel.getInputFields.iterator
     for (field <- pmmlInputs) {
       val recieved = inputsIterator.next.getField
-      assertEquals(field.getName.getValue, recieved.getName.getValue)
-      assertEquals(field.getDataType.value, recieved.getDataType.value)
-      assertEquals(field.getOpType.value, recieved.getOpType.value)
+      assertEquals("Field name correct",field.getName.getValue, recieved.getName.getValue)
+      assertEquals("Field type correct",field.getDataType.value, recieved.getDataType.value)
+      assertEquals("Field operation correct",field.getOpType.value, recieved.getOpType.value)
     }
   }
 
   private def valdateTFModel(tf: Model): Unit = {
     assertTrue(tf.isInstanceOf[SimpleTensorflowModel])
     val tfModel = tf.asInstanceOf[SimpleTensorflowModel]
-    assertNotEquals(null, tfModel.getGrapth)
-    assertNotEquals(null, tfModel.getSession)
+    assertNotEquals("Graph created", null, tfModel.getGrapth)
+    assertNotEquals("Session created",null, tfModel.getSession)
   }
 
   private def valdateTFBundleModel(tf: Model): Unit = {
     assertTrue(tf.isInstanceOf[SimpleTensorflowBundleModel])
     val tfModel = tf.asInstanceOf[SimpleTensorflowBundleModel]
-    assertNotEquals(null, tfModel.getGraph)
-    assertNotEquals(null, tfModel.getSession)
-    assertEquals(1, tfModel.getTags.size)
-    assertEquals(bundleTag, tfModel.getTags(0))
-    assertEquals(1, tfModel.getSignatures.size)
+    assertNotEquals("Graph created",null, tfModel.getGraph)
+    assertNotEquals("Session created",null, tfModel.getSession)
+    assertEquals("Number of Tags is correct",1, tfModel.getTags.size)
+    assertEquals("Name of Tag is correct",bundleTag, tfModel.getTags(0))
+    assertEquals("Number of Signatures is correct",1, tfModel.getSignatures.size)
     val sigEntry = tfModel.getSignatures.toList(0)
-    assertEquals(bundleSignature, sigEntry._1)
+    assertEquals("Signature name is correct",bundleSignature, sigEntry._1)
     val sign = sigEntry._2
-    assertEquals(1, sign.inputs.toList.length)
+    assertEquals("Number of Inputs is correct",1, sign.inputs.toList.length)
     val inputEntry = sign.inputs.toList(0)
-    assertEquals(bundleInputs, inputEntry._1)
-    assertEquals(input.name, inputEntry._2.name)
-    assertArrayEquals(input.shape.toArray, inputEntry._2.shape.toArray)
-    assertEquals(4, sign.outputs.toList.length)
+    assertEquals("Input name is correct",bundleInputs, inputEntry._1)
+    assertEquals("Input name is correct",input.name, inputEntry._2.name)
+    assertArrayEquals("Input shape is correct",input.shape.toArray, inputEntry._2.shape.toArray)
+    assertEquals("Number of outputs is correct",4, sign.outputs.toList.length)
     val outputIterator = output.iterator
     for (outputName <- bundleoutputs) {
       val current = sign.outputs.get(outputName)
-      assertTrue(current.isDefined)
+      assertTrue("Output name is correct",current.isDefined)
       val field = outputIterator.next
-      assertEquals(field.name, current.get.name)
-      assertArrayEquals(field.shape.toArray, current.get.shape.toArray)
+      assertEquals("Output name is correct",field.name, current.get.name)
+      assertArrayEquals("Output shape is correct",field.shape.toArray, current.get.shape.toArray)
     }
   }
 
   private def validateModelToServe(modelToServe: Option[ModelToServe], model: Option[Array[Byte]], location: Option[String], `type`: ModelDescriptor.ModelType): Unit = {
-    assertTrue(modelToServe.isDefined)
-    assertEquals(`type`, modelToServe.get.modelType)
-    assertEquals(dataType, modelToServe.get.dataType)
-    assertEquals(name, modelToServe.get.name)
-    assertEquals(description, modelToServe.get.description)
+    assertTrue("Model is created", modelToServe.isDefined)
+    assertEquals("Model type is correct", `type`, modelToServe.get.modelType)
+    assertEquals("Data type is correct", dataType, modelToServe.get.dataType)
+    assertEquals("Model name is correct", name, modelToServe.get.name)
+    assertEquals("Model description is correct", description, modelToServe.get.description)
     model match {
-      case Some(data) => assertArrayEquals(data, modelToServe.get.model)
-      case _ => assertEquals(location.get, modelToServe.get.location)
+      case Some(data) => assertArrayEquals("Model data is correct", data, modelToServe.get.model)
+      case _ => assertEquals("Model location is correct", location.get, modelToServe.get.location)
     }
   }
 

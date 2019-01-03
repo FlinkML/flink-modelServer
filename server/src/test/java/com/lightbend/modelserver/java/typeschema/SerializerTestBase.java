@@ -16,10 +16,14 @@
  * limitations under the License.
  */
 
-package org.apache.flink.api.common.typeutils;
+package com.lightbend.modelserver.java.typeschema;
 
 import org.apache.commons.lang3.SerializationException;
 import org.apache.commons.lang3.SerializationUtils;
+import org.apache.flink.api.common.typeutils.TypeSerializer;
+import org.apache.flink.api.common.typeutils.TypeSerializerSchemaCompatibility;
+import org.apache.flink.api.common.typeutils.TypeSerializerSnapshot;
+import org.apache.flink.api.common.typeutils.TypeSerializerSnapshotSerializationUtil;
 import org.apache.flink.api.java.typeutils.runtime.NullableSerializer;
 import org.apache.flink.core.memory.*;
 import org.apache.flink.util.InstantiationUtil;
@@ -442,7 +446,7 @@ public abstract class SerializerTestBase<T> extends TestLogger {
 			assertEquals(((Throwable)should).getMessage(), ((Throwable)is).getMessage());
 		}
 		else {
-			assertEquals(message,  should.getClass(), is.getClass());
+			assertEquals(message,  should, is);
 		}
 	}
 

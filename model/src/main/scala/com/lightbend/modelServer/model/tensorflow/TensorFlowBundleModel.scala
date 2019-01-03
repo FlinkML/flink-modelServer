@@ -75,12 +75,22 @@ abstract class TensorFlowBundleModel(inputStream : Array[Byte]) extends Model {
   // Get model type
   override def getType: Long = ModelDescriptor.ModelType.TENSORFLOWSAVED.value
 
+  override def equals(obj: Any): Boolean = {
+    obj match {
+      case tfModel: TensorFlowBundleModel =>
+        tfModel.toBytes.toList == inputStream.toList
+      case _ => false
+    }
+  }
+
+  // Parse signature
   private def parseSignatures(signatures : MMap[String, SignatureDef]) : Map[String, Signature] = {
     signatures.map(signature =>
       signature._1 -> Signature(parseInputOutput(signature._2.getInputsMap.asScala), parseInputOutput(signature._2.getOutputsMap.asScala))
     ).toMap
   }
 
+  // Parse input and output
   private def parseInputOutput(inputOutputs : MMap[String, TensorInfo]) : Map[String, Field] = {
     inputOutputs.map(inputOutput => {
       var name = ""
@@ -120,6 +130,8 @@ abstract class TensorFlowBundleModel(inputStream : Array[Byte]) extends Model {
   }
 }
 
+// Definition of the field (input/output)
 case class Field(name : String, `type` : Descriptors.EnumValueDescriptor, shape : Seq[Int])
 
+// Definition of the signature
 case class Signature(inputs :  Map[String, Field], outputs :  Map[String, Field])

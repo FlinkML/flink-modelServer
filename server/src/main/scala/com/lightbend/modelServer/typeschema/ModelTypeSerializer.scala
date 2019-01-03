@@ -124,7 +124,7 @@ class ModelSerializerConfigSnapshot extends TypeSerializerSnapshot[Option[Model]
 
   override def readSnapshot(readVersion: Int, in: DataInputView, classLoader: ClassLoader): Unit = {
     readVersion match {
-      case 1 =>
+      case CURRENT_VERSION =>
         val className = in.readUTF
         resolveClassName(className, classLoader, false)
       case _ =>

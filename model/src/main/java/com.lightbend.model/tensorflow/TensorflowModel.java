@@ -27,16 +27,21 @@ import com.lightbend.model.Modeldescriptor;
 import org.tensorflow.Graph;
 import org.tensorflow.Session;
 
+import java.util.Arrays;
+
 // Base Tensorflow processing
 public abstract class TensorflowModel implements Model {
     // Tensorflow graph
     protected Graph graph = new Graph();
     // Tensorflow session
     protected Session session;
+    // Byte array
+    protected byte[] bytes;
 
     // Constructor
-    public TensorflowModel(byte[] inputStream) {
-        graph.importGraphDef(inputStream);
+    public TensorflowModel(byte[] input) {
+        bytes = input;
+        graph.importGraphDef(input);
         session = new Session(graph);
     }
 
@@ -48,11 +53,19 @@ public abstract class TensorflowModel implements Model {
 
     @Override
     public byte[] getBytes() {
-        return graph.toGraphDef();
+        return bytes;
     }
 
     @Override
     public long getType() {
         return (long) Modeldescriptor.ModelDescriptor.ModelType.TENSORFLOW_VALUE;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof TensorflowModel) {
+            return Arrays.equals(((TensorflowModel)obj).getBytes(), bytes);
+        }
+        return false;
     }
 }

@@ -18,6 +18,7 @@
 
 package com.lightbend.model;
 
+import java.util.Arrays;
 import java.util.Optional;
 
 // Data converter - collection of static methods for data transformation
@@ -74,8 +75,10 @@ public class DataConverter {
             return null;
         else {
             ModelFactory factory = resolver.getFactory((int) model.getType());
-            if(factory != null)
-                return factory.restore(model.getBytes());
+            if(factory != null) {
+                byte[] bytes = model.getBytes();
+                return factory.restore(Arrays.copyOf(bytes, bytes.length));
+            }
             return null;
         }
      }

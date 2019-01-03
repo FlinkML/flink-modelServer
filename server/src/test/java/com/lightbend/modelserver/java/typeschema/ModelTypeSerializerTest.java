@@ -4,7 +4,6 @@ import com.lightbend.model.DataConverter;
 import com.lightbend.model.Model;
 import com.lightbend.model.Modeldescriptor;
 import com.lightbend.model.SimpleFactoryResolver;
-import org.apache.flink.api.common.typeutils.SerializerTestBase;
 import org.apache.flink.api.common.typeutils.TypeSerializer;
 import org.junit.BeforeClass;
 

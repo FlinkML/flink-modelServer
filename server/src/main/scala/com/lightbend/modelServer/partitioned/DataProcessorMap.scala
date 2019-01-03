@@ -55,8 +55,8 @@ class DataProcessorMap extends RichCoFlatMapFunction[DataToServe, ModelToServe, 
     // Clear checkpointing state
     checkpointedState.clear()
     // Populate checkpointing state
-    currentModels.foreach(entry => checkpointedState.add(ModelWithType(true, entry._1, Some(entry._2))))
-    newModels.foreach(entry => checkpointedState.add(ModelWithType(false, entry._1, Some(entry._2))))
+    currentModels.foreach(entry => checkpointedState.add(new ModelWithType(true, entry._1, Some(entry._2))))
+    newModels.foreach(entry => checkpointedState.add(new ModelWithType(false, entry._1, Some(entry._2))))
   }
 
   // Restore checkpoint

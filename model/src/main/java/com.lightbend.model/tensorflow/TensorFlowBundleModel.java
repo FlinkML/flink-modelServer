@@ -33,10 +33,10 @@ abstract public class TensorFlowBundleModel implements Model {
     // Path;
     private String path;
 
-    public TensorFlowBundleModel(byte[] inputStream){
+    public TensorFlowBundleModel(byte[] input){
 
         // Convert input into file path
-        path = new String(inputStream);
+        path = new String(input);
         // get tags. We assume here that the first tag is the one we use
         tags = getTags(path);
         if(tags.size() > 0) {
@@ -83,6 +83,15 @@ abstract public class TensorFlowBundleModel implements Model {
     public long getType() {
         return (long) Modeldescriptor.ModelDescriptor.ModelType.TENSORFLOWSAVED_VALUE;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof TensorFlowBundleModel) {
+            return ((TensorFlowBundleModel)obj).path.equals(path);
+        }
+        return false;
+    }
+
 
 //    private
 

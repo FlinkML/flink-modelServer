@@ -55,6 +55,23 @@ public class ModelWithType {
     public void setModel(Optional<Model> model) { this.model = model; }
 
     @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof ModelWithType) {
+            ModelWithType other = (ModelWithType)obj;
+            boolean modelEqual;
+            if(model.isPresent()){
+                if(other.getModel().isPresent()) modelEqual = model.get().equals(other.getModel().get());
+                else modelEqual = false;
+            }else {
+                if(other.getModel().isPresent()) modelEqual = false;
+                else modelEqual = true;
+            }
+            return modelEqual && (dataType.equals(other.getDataType())) && (current == other.isCurrent());
+        }
+        return false;
+    }
+
+    @Override
     public String toString() {
         return "ModelWithType{" +
                 "current=" + current +

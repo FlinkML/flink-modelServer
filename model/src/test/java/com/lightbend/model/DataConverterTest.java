@@ -80,14 +80,13 @@ public class DataConverterTest {
         Optional<Model> pmml = DataConverter.toModel(result.get());
 
         // Validate
-        assertTrue(pmml.isPresent());
+        assertTrue("PMML Model created", pmml.isPresent());
         valdatePMMLModel(pmml.get());
 
         // Simply copy the model
         Model copyDirect = DataConverter.copy(pmml.get());
         // Validate
-        assertNotEquals(pmml.get(), copyDirect);
-        valdatePMMLModel(copyDirect);
+        assertEquals("Copy equal to source", pmml.get(), copyDirect);
 
         // Create model from binary
         Model direct = DataConverter.restore(Modeldescriptor.ModelDescriptor.ModelType.PMML.getNumber(), model);
@@ -110,14 +109,13 @@ public class DataConverterTest {
         Optional<Model> tf = DataConverter.toModel(result.get());
 
         // Validate
-        assertTrue(tf.isPresent());
+        assertTrue("TF Model created", tf.isPresent());
         valdateTFModel(tf.get());
 
         // Simply copy the model
         Model copyDirect = DataConverter.copy(tf.get());
         // Validate
-        assertNotEquals(tf.get(), copyDirect);
-        valdateTFModel(copyDirect);
+        assertEquals("Copy equal to source", tf.get(), copyDirect);
 
         // Create model from binary
         Model direct = DataConverter.restore(Modeldescriptor.ModelDescriptor.ModelType.TENSORFLOW.getNumber(), model);
@@ -142,13 +140,13 @@ public class DataConverterTest {
         Optional<Model> tf = DataConverter.toModel(result.get());
 
         // Validate
-        assertTrue(tf.isPresent());
+        assertTrue("TF Model created", tf.isPresent());
         valdateTFBundleModel(tf.get());
 
         // Simply copy the model
         Model copyDirect = DataConverter.copy(tf.get());
         // Validate
-        assertNotEquals(tf.get(), copyDirect);
+        assertEquals("Copy equal to source", tf.get(), copyDirect);
         valdateTFBundleModel(copyDirect);
 
         // Create model from binary
@@ -161,62 +159,62 @@ public class DataConverterTest {
     private void valdatePMMLModel(Model pmml){
         assertTrue(pmml instanceof SimplePMMLModel);
         SimplePMMLModel pmmlModel = (SimplePMMLModel)pmml;
-        assertNotEquals(null, pmmlModel.getPmml());
-        assertNotEquals(null, pmmlModel.getEvaluator());
-        assertEquals("quality", pmmlModel.getTname().toString());
+        assertNotEquals("PMML is created",null, pmmlModel.getPmml());
+        assertNotEquals("PMML Evaluator is created", null, pmmlModel.getEvaluator());
+        assertEquals("PMML input is correct", "quality", pmmlModel.getTname().toString());
         Iterator<InputField> inputsIterator = pmmlModel.getInputFields().iterator();
         for(DataField field : pmmlInputs) {
             Field<?> recieved = inputsIterator.next().getField();
-            assertEquals(field.getName().getValue(), recieved.getName().getValue());
-            assertEquals(field.getDataType().value(), recieved.getDataType().value());
-            assertEquals(field.getOpType().value(), recieved.getOpType().value());
+            assertEquals("Output field name", field.getName().getValue(), recieved.getName().getValue());
+            assertEquals("Output field type",field.getDataType().value(), recieved.getDataType().value());
+            assertEquals("Output field operation type",field.getOpType().value(), recieved.getOpType().value());
         }
     }
 
     private void valdateTFModel(Model tf) {
         assertTrue(tf instanceof SimpleTensorflowModel);
         SimpleTensorflowModel tfModel = (SimpleTensorflowModel) tf;
-        assertNotEquals(null, tfModel.getGrapth());
-        assertNotEquals(null, tfModel.getSession());
+        assertNotEquals("Graph is created",null, tfModel.getGrapth());
+        assertNotEquals("Session is created",null, tfModel.getSession());
     }
 
     private void valdateTFBundleModel(Model tf) {
         assertTrue(tf instanceof SimpleTensorFlowBundleModel);
         SimpleTensorFlowBundleModel tfModel = (SimpleTensorFlowBundleModel) tf;
-        assertNotEquals(null, tfModel.getGraph());
-        assertNotEquals(null, tfModel.getSession());
+        assertNotEquals("Graph is created",null, tfModel.getGraph());
+        assertNotEquals("Session is created",null, tfModel.getSession());
         assertEquals(1, tfModel.getTags().size());
-        assertEquals(bundleTag, tfModel.getTags().get(0));
-        assertEquals(1, tfModel.getSignatures().size());
+        assertEquals("Tag is correct", bundleTag, tfModel.getTags().get(0));
+        assertEquals("Number of signatures is correct",1, tfModel.getSignatures().size());
         Map.Entry<String, TensorFlowBundleModel.Signature> sigEntry = tfModel.getSignatures().entrySet().iterator().next();
-        assertEquals(bundleSignature, sigEntry.getKey());
+        assertEquals("Signature name is correct", bundleSignature, sigEntry.getKey());
         TensorFlowBundleModel.Signature sign = sigEntry.getValue();
-        assertEquals(1, sign.getInputs().size());
+        assertEquals("Number of inputs is correct",1, sign.getInputs().size());
         Map.Entry<String, TensorFlowBundleModel.Field> inputEntry = sign.getInputs().entrySet().iterator().next();
-        assertEquals(bundleInputs, inputEntry.getKey());
-        assertEquals(input.getName(), inputEntry.getValue().getName());
-        assertArrayEquals(input.getShape().toArray(new Integer[0]), inputEntry.getValue().getShape().toArray(new Integer[0]));
-        assertEquals(4, sign.getOutputs().size());
+        assertEquals("Input name is correct", bundleInputs, inputEntry.getKey());
+        assertEquals("Input name is correct", input.getName(), inputEntry.getValue().getName());
+        assertArrayEquals("Input shape is correct", input.getShape().toArray(new Integer[0]), inputEntry.getValue().getShape().toArray(new Integer[0]));
+        assertEquals("Number of outputs is correct",4, sign.getOutputs().size());
         Iterator<TensorFlowBundleModel.Field> outputIterator = output.iterator();
         for (String outputName : bundleoutputs) {
             TensorFlowBundleModel.Field current = sign.getOutputs().get(outputName);
-            assertNotEquals(null, current);
+            assertNotEquals("Output name is correct", null, current);
             TensorFlowBundleModel.Field field = outputIterator.next();
-            assertEquals(field.getName(), current.getName());
-            assertArrayEquals(field.getShape().toArray(new Integer[0]), current.getShape().toArray(new Integer[0]));
+            assertEquals("Output name is correct", field.getName(), current.getName());
+            assertArrayEquals("Output shape is correct", field.getShape().toArray(new Integer[0]), current.getShape().toArray(new Integer[0]));
         }
     }
 
     private void validateModelToServe(Optional<ModelToServe> modelToServe, byte[] model, String location, Modeldescriptor.ModelDescriptor.ModelType type){
-        assertTrue(modelToServe.isPresent());
-        assertEquals(type, modelToServe.get().getModelType());
-        assertEquals(dataType, modelToServe.get().getDataType());
-        assertEquals(name, modelToServe.get().getName());
-        assertEquals(description, modelToServe.get().getDescription());
+        assertTrue("Model is created", modelToServe.isPresent());
+        assertEquals("Model type is correct", type, modelToServe.get().getModelType());
+        assertEquals("Data type is correct", dataType, modelToServe.get().getDataType());
+        assertEquals("Model name is correct", name, modelToServe.get().getName());
+        assertEquals("Model description is correct", description, modelToServe.get().getDescription());
         if(model != null)
-            assertArrayEquals(model, modelToServe.get().getModelData());
+            assertArrayEquals("Model data is correct", model, modelToServe.get().getModelData());
         else
-            assertEquals(location, modelToServe.get().getModelDataLocation());
+            assertEquals("Model location is correct", location, modelToServe.get().getModelDataLocation());
     }
 
     private byte[] getModel(String fileName) {

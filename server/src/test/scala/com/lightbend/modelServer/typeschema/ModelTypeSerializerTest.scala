@@ -6,8 +6,9 @@ import java.nio.file.{Files, Paths}
 import com.lighbend.modelServer.SimpleFactoryResolver
 import com.lightbend.model.Modeldescriptor.ModelDescriptor
 import com.lightbend.modelServer.ModelToServe
-import org.apache.flink.api.common.typeutils.{SerializerTestBase, TypeSerializer}
+import org.apache.flink.api.common.typeutils.TypeSerializer
 import com.lightbend.modelServer.model.Model
+import com.lightbend.modelserver.java.typeschema.SerializerTestBase
 
 class ModelTypeSerializerTest extends SerializerTestBase[Option[Model]] {
 

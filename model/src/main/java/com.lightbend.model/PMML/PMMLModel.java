@@ -31,7 +31,6 @@ import org.jpmml.evaluator.visitors.*;
 import org.jpmml.model.PMMLUtil;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.util.Arrays;
 import java.util.List;
 
@@ -49,8 +48,12 @@ public abstract class PMMLModel implements Model {
     protected FieldName tname;
     // Input fields names
     protected List<InputField> inputFields;
+    // Byte array
+    protected byte[] bytes;
 
     public PMMLModel(byte[] input) throws Throwable{
+        // Save bytes
+        bytes = input;
         // unmarshal PMML
         pmml = PMMLUtil.unmarshal(new ByteArrayInputStream(input));
         // Optimize model
@@ -83,19 +86,18 @@ public abstract class PMMLModel implements Model {
     }
 
     @Override
-    public byte[] getBytes() {
-        ByteArrayOutputStream ous = new ByteArrayOutputStream();
-        try {
-            PMMLUtil.marshal(pmml, ous);
-        }
-        catch(Throwable t){
-            t.printStackTrace();
-        }
-        return ous.toByteArray();
-    }
+    public byte[] getBytes() { return bytes; }
 
     @Override
     public long getType() {
         return (long) Modeldescriptor.ModelDescriptor.ModelType.PMML.getNumber();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof PMMLModel) {
+            return Arrays.equals(((PMMLModel)obj).getBytes(), bytes);
+        }
+        return false;
     }
 }

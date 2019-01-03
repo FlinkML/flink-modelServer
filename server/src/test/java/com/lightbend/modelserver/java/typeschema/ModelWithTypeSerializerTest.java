@@ -1,7 +1,6 @@
 package com.lightbend.modelserver.java.typeschema;
 
 import com.lightbend.model.*;
-import org.apache.flink.api.common.typeutils.SerializerTestBase;
 import org.apache.flink.api.common.typeutils.TypeSerializer;
 import org.junit.BeforeClass;
 
