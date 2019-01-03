@@ -18,8 +18,6 @@
 
 package com.lightbend.model;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.util.Optional;
 
 // Data converter - collection of static methods for data transformation
@@ -56,52 +54,15 @@ public class DataConverter {
                         model.getData().toByteArray(), null, model.getDataType()));
             }
             else {
-                System.out.println("Location based model is not yet supported");
-                return Optional.empty();
+                return Optional.of(new ModelToServe(
+                        model.getName(), model.getDescription(), model.getModeltype(),
+                        null, model.getLocation(), model.getDataType()));
             }
         } catch (Throwable t) {
             // Oops
             System.out.println("Exception parsing input record" + new String(binary));
             t.printStackTrace();
             return Optional.empty();
-        }
-    }
-
-    // Read model from byte array
-    public static Optional<Model> readModel(DataInputStream input) {
-        if(!validateResolver())
-            return Optional.empty();
-        try {
-            int length = (int)input.readLong();
-            if (length == 0)
-                return Optional.empty();
-            int type = (int) input.readLong();
-            byte[] bytes = new byte[length];
-            input.read(bytes);
-            ModelFactory factory = resolver.getFactory(type);
-            return Optional.of(factory.restore(bytes));
-        } catch (Throwable t) {
-            System.out.println("Error Deserializing model");
-            t.printStackTrace();
-            return Optional.empty();
-        }
-    }
-
-    // Write model to data stream
-    public static void writeModel(Model model, DataOutputStream output){
-        try{
-            if(model == null){
-                output.writeLong(0);
-                return;
-            }
-            byte[] bytes = model.getBytes();
-            output.writeLong(bytes.length);
-            output.writeLong(model.getType());
-            output.write(bytes);
-        }
-        catch (Throwable t){
-            System.out.println("Error Serializing model");
-            t.printStackTrace();
         }
     }
 

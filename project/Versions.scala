@@ -18,11 +18,12 @@
 
 object Versions {
 
-  val flinkVersion        = "1.7.0"
+  val flinkVersion        = "1.7.1"
   val kafkaVersion        = "2.1.0"
   val tensorflowVersion   = "1.12.0"
   val PMMLVersion         = "1.4.3"
   val jodaVersion         = "2.10.1"
   val curatorVersion      = "4.0.1"
   val slf4jVersion        = "1.7.25"
+  val junitVersion        = "4.12"
 }

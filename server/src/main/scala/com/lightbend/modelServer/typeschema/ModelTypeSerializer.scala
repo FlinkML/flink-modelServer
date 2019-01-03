@@ -38,14 +38,18 @@ class ModelTypeSerializer extends TypeSerializer[Option[Model]] {
   override def duplicate(): TypeSerializer[Option[Model]] = new ModelTypeSerializer
 
   override def serialize(record: Option[Model], target: DataOutputView): Unit = {
-    record match {
-      case Some(model) =>
-        target.writeBoolean(true)
-        val content = model.toBytes()
-        target.writeLong(model.getType)
-        target.writeLong(content.length)
-        target.write(content)
-      case _ => target.writeBoolean(false)
+    if(record == null)
+      target.writeBoolean(false)
+    else {
+      record match {
+        case Some(model) =>
+          target.writeBoolean(true)
+          val content = model.toBytes()
+          target.writeLong(model.getType)
+          target.writeLong(content.length)
+          target.write(content)
+        case _ => target.writeBoolean(false)
+      }
     }
   }
 
@@ -55,7 +59,10 @@ class ModelTypeSerializer extends TypeSerializer[Option[Model]] {
 
   override def snapshotConfiguration(): TypeSerializerSnapshot[Option[Model]] = new ModelSerializerConfigSnapshot
 
-  override def copy(from: Option[Model]): Option[Model] = ModelToServe.copy(from)
+  override def copy(from: Option[Model]): Option[Model] = {
+    if(from == null) null
+    else ModelToServe.copy(from)
+  }
 
   override def copy(from: Option[Model], reuse: Option[Model]): Option[Model] = ModelToServe.copy(from)
 
@@ -82,7 +89,7 @@ class ModelTypeSerializer extends TypeSerializer[Option[Model]] {
         val content = new Array[Byte] (size)
         source.read (content)
         ModelToServe.restore(t, content)
-      case _ => None
+      case _ => null
     }
 
   override def deserialize(reuse: Option[Model], source: DataInputView): Option[Model] = deserialize(source)
@@ -99,7 +106,7 @@ object ModelTypeSerializer{
 
 object ModelSerializerConfigSnapshot{
 
-  val CURRENT_VERSION = 2
+  val CURRENT_VERSION = 1
 }
 
 // Snapshot configuration Model serializer
@@ -112,13 +119,12 @@ class ModelSerializerConfigSnapshot extends TypeSerializerSnapshot[Option[Model]
 
   override def getCurrentVersion: Int = CURRENT_VERSION
 
-  override def writeSnapshot(out: DataOutputView): Unit = {
-    out.writeUTF(serializerClass.getClass.getName)
-  }
+  override def writeSnapshot(out: DataOutputView): Unit = out.writeUTF(serializerClass.getName)
+
 
   override def readSnapshot(readVersion: Int, in: DataInputView, classLoader: ClassLoader): Unit = {
     readVersion match {
-      case 2 =>
+      case 1 =>
         val className = in.readUTF
         resolveClassName(className, classLoader, false)
       case _ =>

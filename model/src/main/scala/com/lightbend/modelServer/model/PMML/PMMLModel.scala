@@ -31,7 +31,7 @@ import scala.collection._
 
 // Abstract class for any PMML model processing. It has to be extended by the user
 // implement score method, based on his own model
-abstract class PMMLModel(inputStream: Array[Byte]) extends Model(inputStream) {
+abstract class PMMLModel(inputStream: Array[Byte]) extends Model {
 
   var arguments = mutable.Map[FieldName, FieldValue]()
 

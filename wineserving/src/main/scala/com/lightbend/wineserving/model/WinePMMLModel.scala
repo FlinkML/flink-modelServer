@@ -24,15 +24,11 @@ package com.lightbend.wineserving.model
   * Class for PMML model
   */
 
-import java.io.ByteArrayOutputStream
-
-import com.lightbend.model.modeldescriptor.ModelDescriptor
 import com.lightbend.model.winerecord.WineRecord
 import com.lightbend.modelServer.ModelToServe
 import com.lightbend.modelServer.model.PMML.PMMLModel
 import com.lightbend.modelServer.model.{Model, ModelFactory}
 import org.jpmml.evaluator.Computable
-import org.jpmml.model.PMMLUtil
 
 import scala.collection.JavaConversions._
 import scala.collection._

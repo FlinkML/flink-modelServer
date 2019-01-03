@@ -68,6 +68,10 @@ public class ModelToServe implements Serializable {
         return modelData;
     }
 
+    public String getModelDataLocation() {
+        return modelDataLocation;
+    }
+
     @Override
     public String toString() {
         return "ModelToServe{" +

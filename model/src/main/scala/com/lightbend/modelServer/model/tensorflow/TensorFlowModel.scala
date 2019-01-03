@@ -25,7 +25,7 @@ import org.tensorflow.{Graph, Session}
 // Abstract class for any Tensorflow (optimized export) model processing. It has to be extended by the user
 // implement score method, based on his own model
 
-abstract class TensorFlowModel(inputStream : Array[Byte]) extends Model(inputStream){
+abstract class TensorFlowModel(inputStream : Array[Byte]) extends Model {
 
   // Model graph
   val graph = new Graph
@@ -48,7 +48,7 @@ abstract class TensorFlowModel(inputStream : Array[Byte]) extends Model(inputStr
   }
 
   // Convert tensorflow model to bytes
-  override def toBytes(): Array[Byte] = graph.toGraphDef
+  override def toBytes(): Array[Byte] = inputStream   //graph.toGraphDef
 
   // Get model type
   override def getType: Long = ModelDescriptor.ModelType.TENSORFLOW.value

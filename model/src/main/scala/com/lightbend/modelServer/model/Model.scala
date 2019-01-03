@@ -19,7 +19,7 @@
 package com.lightbend.modelServer.model
 
 // Generic definition of the model
-abstract class Model(inputStream : Array[Byte]) {
+abstract class Model {
   def score(input : AnyVal) : AnyVal
   def cleanup() : Unit
   def toBytes() : Array[Byte]

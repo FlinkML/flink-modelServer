@@ -51,7 +51,7 @@ public class ModelSerializerConfigSnapshot extends SimpleTypeSerializerSnapshot<
     @Override
     public void readSnapshot(int readVersion, DataInputView in, ClassLoader classLoader) throws IOException {
         switch (readVersion) {
-            case 2:
+            case 1:
                 read(in, classLoader);
                 break;
             default:

@@ -51,12 +51,8 @@ public abstract class TensorflowModel implements Model {
         return graph.toGraphDef();
     }
 
-    public Graph getGraph() {
-        return graph;
-    }
-
     @Override
     public long getType() {
-        return (long) Modeldescriptor.ModelDescriptor.ModelType.TENSORFLOW.getNumber();
+        return (long) Modeldescriptor.ModelDescriptor.ModelType.TENSORFLOW_VALUE;
     }
 }

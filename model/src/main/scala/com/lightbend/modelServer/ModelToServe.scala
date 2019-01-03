@@ -18,6 +18,8 @@
 
 package com.lightbend.modelServer
 
+import java.io.DataOutputStream
+
 import scala.util.Try
 import com.lightbend.model.modeldescriptor.ModelDescriptor
 import com.lightbend.modelServer.model.{Model, ModelFactoryResolver}
@@ -40,10 +42,29 @@ object ModelToServe {
   def fromByteArray(message: Array[Byte]): Try[ModelToServe] = Try{
     val m = ModelDescriptor.parseFrom(message)
     m.messageContent.isData match {
-      case true => new ModelToServe(m.name, m.description, m.modeltype, m.getData.toByteArray, m.dataType)
-      case _ => throw new Exception("Location based is not yet supported")
+      case true => new ModelToServe(m.name, m.description, m.modeltype, m.getData.toByteArray, null, m.dataType)
+      case _ => new ModelToServe(m.name, m.description, m.modeltype, null, m.getLocation, m.dataType)
     }
   }
+
+  // Write model to data stream
+  def writeModel(model: Model, output: DataOutputStream): Unit = {
+    try {
+      if (model == null) {
+        output.writeLong(0)
+        return
+      }
+      val bytes = model.toBytes()
+      output.writeLong(bytes.length)
+      output.writeLong(model.getType)
+      output.write(bytes)
+    } catch {
+      case t: Throwable =>
+        System.out.println("Error Serializing model")
+        t.printStackTrace()
+    }
+  }
+
 
   // Deep copy the model
   def copy(from: Option[Model]): Option[Model] = {
@@ -78,7 +99,7 @@ object ModelToServe {
 // Model to serve definition
 case class ModelToServe(name: String, description: String,
                         modelType: ModelDescriptor.ModelType,
-                        model : Array[Byte], dataType : String) {}
+                        model : Array[Byte], location : String, dataType : String) {}
 
 // Model serving statistics definition
 case class ModelToServeStats(name: String = "", description: String = "",

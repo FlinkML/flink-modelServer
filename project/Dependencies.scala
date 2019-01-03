@@ -26,16 +26,19 @@ object Dependencies {
   val flinkKafka            = "org.apache.flink"    %% "flink-connector-kafka"              % flinkVersion
   val flinkQueryableRuntime = "org.apache.flink"    %% "flink-queryable-state-runtime"      % flinkVersion
   val flinkQueryableClient  = "org.apache.flink"    %% "flink-queryable-state-client-java"  % flinkVersion
+  val flinktestutils        = "org.apache.flink"    %% "flink-test-utils"                   % flinkVersion      % Test
+
   val kafka                 = "org.apache.kafka"    %% "kafka"                              % kafkaVersion
   val tensorflow            = "org.tensorflow"      % "tensorflow"                          % tensorflowVersion
+  val tensoeflowProto       = "org.tensorflow"      % "proto"                               % tensorflowVersion
   val PMMLEvaluator         = "org.jpmml"           % "pmml-evaluator"                      % PMMLVersion
   val PMMLExtensions        = "org.jpmml"           % "pmml-evaluator-extension"            % PMMLVersion
   val joda                  = "joda-time"           % "joda-time"                           % jodaVersion
   val curator               = "org.apache.curator"  % "curator-test"                        % curatorVersion                 // ApacheV2
   val slf4japi              = "org.slf4j"           % "slf4j-api"                           % slf4jVersion
   val slf4jsimple           = "org.slf4j"           % "slf4j-simple"                        % slf4jVersion
-
-
-  val flinkDependencies = Seq(flinkScala, flinkStreaming, flinkKafka, flinkQueryableRuntime, flinkQueryableClient, slf4japi, slf4jsimple)
-  val modelsDependencies = Seq(PMMLEvaluator, PMMLExtensions, tensorflow, slf4japi, slf4jsimple)
+  val junit                 = "junit"               % "junit"                               % junitVersion      % Test
+  
+  val flinkDependencies = Seq(flinkScala, flinkStreaming, flinkKafka, flinkQueryableRuntime, flinkQueryableClient, slf4japi, slf4jsimple, junit, flinktestutils)
+  val modelsDependencies = Seq(PMMLEvaluator, PMMLExtensions, tensorflow, tensoeflowProto, slf4japi, slf4jsimple, junit)
 }

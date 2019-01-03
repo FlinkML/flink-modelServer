@@ -41,7 +41,7 @@ public class ModelWithTypeSerializer extends TypeSerializer<ModelWithType> {
     @Override public void serialize(ModelWithType model, DataOutputView target) throws IOException {
 
         target.writeBoolean(model.isCurrent());
-        target.writeChars(model.getDataType());
+        target.writeUTF(model.getDataType());
         if (model.getModel().isPresent()) {
             target.writeBoolean(true);
             byte[] content = model.getModel().get().getBytes();
@@ -75,7 +75,7 @@ public class ModelWithTypeSerializer extends TypeSerializer<ModelWithType> {
 
     @Override public void copy(DataInputView source, DataOutputView target) throws IOException {
         target.writeBoolean(source.readBoolean());
-        target.writeChars(source.readLine());
+        target.writeUTF(source.readUTF());
         boolean exist = source.readBoolean();
         target.writeBoolean(exist);
         if(!exist) return;
@@ -90,7 +90,7 @@ public class ModelWithTypeSerializer extends TypeSerializer<ModelWithType> {
     @Override public ModelWithType deserialize(DataInputView source) throws IOException {
 
         boolean current = source.readBoolean();
-        String dataType = source.readLine();
+        String dataType = source.readUTF();
         boolean exist = source.readBoolean();
         Optional<Model> model = Optional.empty();
         if(exist) {

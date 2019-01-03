@@ -18,7 +18,7 @@ class ModelWithTypeSerializer extends TypeSerializer[ModelWithType] {
 
   override def serialize(model: ModelWithType, target: DataOutputView): Unit = {
     target.writeBoolean(model.isCurrent)
-    target.writeChars(model.dataType)
+    target.writeUTF(model.dataType)
     model.model match {
       case Some(m) =>
         target.writeBoolean(true)
@@ -43,7 +43,7 @@ class ModelWithTypeSerializer extends TypeSerializer[ModelWithType] {
 
   override def copy(source: DataInputView, target: DataOutputView): Unit = {
     target.writeBoolean(source.readBoolean())
-    target.writeChars(source.readLine())
+    target.writeUTF(source.readUTF())
     val exist = source.readBoolean()
     target.writeBoolean(exist)
     exist match {
@@ -60,7 +60,7 @@ class ModelWithTypeSerializer extends TypeSerializer[ModelWithType] {
 
   override def deserialize(source: DataInputView): ModelWithType = {
     val current = source.readBoolean()
-    val dataType = source.readLine()
+    val dataType = source.readUTF()
     source.readBoolean() match {
       case true =>
         val t = source.readLong().asInstanceOf[Int]
@@ -86,7 +86,7 @@ object ModelWithTypeSerializer{
 
 object ModelWithTypeSerializerConfigSnapshot{
 
-  val CURRENT_VERSION = 2
+  val CURRENT_VERSION = 1
 }
 
 // Snapshot configuration for Model with type serializer
@@ -100,12 +100,12 @@ class ModelWithTypeSerializerConfigSnapshot extends SimpleTypeSerializerSnapshot
   override def getCurrentVersion: Int = CURRENT_VERSION
 
   override def writeSnapshot(out: DataOutputView): Unit = {
-    out.writeUTF(serializerClass.getClass.getName)
+    out.writeUTF(serializerClass.getName)
   }
 
   override def readSnapshot(readVersion: Int, in: DataInputView, classLoader: ClassLoader): Unit = {
     readVersion match {
-      case 2 =>
+      case 1 =>
         val className = in.readUTF
         resolveClassName(className, classLoader, false)
        case _ =>
