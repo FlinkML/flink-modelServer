@@ -25,7 +25,7 @@ import org.tensorflow.Session;
 // Tensorflow implementation for testing
 public class SimpleTensorflowModel extends TensorflowModel {
 
-    public SimpleTensorflowModel(byte[] inputStream) {
+    public SimpleTensorflowModel(byte[] inputStream) throws Throwable {
         super(inputStream);
     }
 

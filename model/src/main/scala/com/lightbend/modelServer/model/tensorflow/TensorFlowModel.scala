@@ -27,6 +27,8 @@ import org.tensorflow.{Graph, Session}
 
 abstract class TensorFlowModel(inputStream : Array[Byte]) extends Model {
 
+  // Make sure data is not empty
+  if(inputStream.length < 1) throw new Exception("Empty graph data")
   // Model graph
   val graph = new Graph
   graph.importGraphDef(inputStream)

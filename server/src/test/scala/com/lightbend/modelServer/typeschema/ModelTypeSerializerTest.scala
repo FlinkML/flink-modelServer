@@ -38,7 +38,7 @@ class ModelTypeSerializerTest extends SerializerTestBase[Option[Model]] {
     val location = file.getPath
     // Create model from location
     val tfbundled = ModelToServe.restore(ModelDescriptor.ModelType.TENSORFLOWSAVED.getNumber, location.getBytes)
-    Array[Option[Model]](pmml, tfoptimized, tfbundled)
+    Array[Option[Model]](Option.empty, pmml, tfoptimized, tfbundled)
   }
 
   private def getModel(fileName: String) : Array[Byte] = {

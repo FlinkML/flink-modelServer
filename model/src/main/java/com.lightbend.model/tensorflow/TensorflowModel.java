@@ -39,7 +39,9 @@ public abstract class TensorflowModel implements Model {
     protected byte[] bytes;
 
     // Constructor
-    public TensorflowModel(byte[] input) {
+    public TensorflowModel(byte[] input) throws Throwable {
+        if(input.length < 1)
+            throw new Exception("Empty graph data");
         bytes = input;
         graph.importGraphDef(input);
         session = new Session(graph);

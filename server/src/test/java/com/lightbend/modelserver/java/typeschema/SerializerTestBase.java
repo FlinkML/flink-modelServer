@@ -397,6 +397,8 @@ public abstract class SerializerTestBase<T> extends TestLogger {
 	@Test
 	public void testNullability() {
 		TypeSerializer<T> serializer = getSerializer();
+		if(getTypeClass().getName().contains("Option"))
+			return;
 		try {
 			NullableSerializer.checkIfNullSupported(serializer);
 		} catch (Throwable t) {

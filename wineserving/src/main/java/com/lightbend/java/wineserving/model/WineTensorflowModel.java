@@ -25,7 +25,7 @@ import org.tensorflow.Tensor;
 // Tensorflow implementation for wine data
 public class WineTensorflowModel extends TensorflowModel {
 
-    public WineTensorflowModel(byte[] inputStream) {
+    public WineTensorflowModel(byte[] inputStream) throws Throwable {
         super(inputStream);
     }
 

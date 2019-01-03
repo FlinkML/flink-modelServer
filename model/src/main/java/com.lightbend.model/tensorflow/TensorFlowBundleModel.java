@@ -33,7 +33,7 @@ abstract public class TensorFlowBundleModel implements Model {
     // Path;
     private String path;
 
-    public TensorFlowBundleModel(byte[] input){
+    public TensorFlowBundleModel(byte[] input) throws Throwable {
 
         // Convert input into file path
         path = new String(input);
@@ -60,9 +60,7 @@ abstract public class TensorFlowBundleModel implements Model {
             session = bundle.session();
         }
         else{
-            graph = null;
-            session = null;
-            signatures = null;
+            throw new Exception("Can't get Tensorflow bundle model");
         }
     }
 

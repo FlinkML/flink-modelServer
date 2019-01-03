@@ -96,6 +96,23 @@ public class DataConverterTest {
     }
 
     @Test
+    public void testPMMLBadData() {
+        // Get PMML model from File
+        byte[] model = new byte[0];
+        // Build input record
+        byte[] record = getbinaryContent(model, null, Modeldescriptor.ModelDescriptor.ModelType.PMML);
+        // Convert input record
+        Optional<ModelToServe> result = DataConverter.convertModel(record);
+        // validate it
+        validateModelToServe(result, model, null, Modeldescriptor.ModelDescriptor.ModelType.PMML);
+        // Build PMML model
+        Optional<Model> pmml = DataConverter.toModel(result.get());
+
+        // Validate
+        assertFalse("PMML Model is not created", pmml.isPresent());
+    }
+
+    @Test
     public void testTFOptimized() {
         // Get TF model from File
         byte[] model = getModel(tfmodeloptimized);
@@ -122,6 +139,23 @@ public class DataConverterTest {
 
         // Validate it
         valdateTFModel(direct);
+    }
+
+    @Test
+    public void testTFOptimizedBadData() {
+        // Get TF model from File
+        byte[] model = new byte[0];
+        // Build input record
+        byte[] record = getbinaryContent(model, null, Modeldescriptor.ModelDescriptor.ModelType.TENSORFLOW);
+        // Convert input record
+        Optional<ModelToServe> result = DataConverter.convertModel(record);
+        // validate it
+        validateModelToServe(result, model, null, Modeldescriptor.ModelDescriptor.ModelType.TENSORFLOW);
+        // Build TF model
+        Optional<Model> tf = DataConverter.toModel(result.get());
+
+        // Validate
+        assertFalse("TF Model created", tf.isPresent());
     }
 
     @Test
@@ -156,7 +190,23 @@ public class DataConverterTest {
         valdateTFBundleModel(direct);
     }
 
-    private void valdatePMMLModel(Model pmml){
+    @Test
+    public void testTFBundledBadData() {
+        String model = new String();
+        // Build input record
+        byte[] record = getbinaryContent(null, model, Modeldescriptor.ModelDescriptor.ModelType.TENSORFLOWSAVED);
+        // Convert input record
+        Optional<ModelToServe> result = DataConverter.convertModel(record);
+        // validate it
+        validateModelToServe(result, null, model, Modeldescriptor.ModelDescriptor.ModelType.TENSORFLOWSAVED);
+        // Build TF model
+        Optional<Model> tf = DataConverter.toModel(result.get());
+
+        // Validate
+        assertFalse("TF Model is not created", tf.isPresent());
+    }
+
+        private void valdatePMMLModel(Model pmml){
         assertTrue(pmml instanceof SimplePMMLModel);
         SimplePMMLModel pmmlModel = (SimplePMMLModel)pmml;
         assertNotEquals("PMML is created",null, pmmlModel.getPmml());

@@ -50,7 +50,7 @@ public class ModelTypeSerializerTest extends SerializerTestBase<Model>{
         String location = file.getPath();
         // Create model from location
         Model tfbundled = DataConverter.restore(Modeldescriptor.ModelDescriptor.ModelType.TENSORFLOWSAVED.getNumber(), location.getBytes());
-        return new Model[]{pmml, tfoptimized, tfbundled};
+        return new Model[]{null, pmml, tfoptimized, tfbundled};
     }
 
     private byte[] getModel(String fileName) {

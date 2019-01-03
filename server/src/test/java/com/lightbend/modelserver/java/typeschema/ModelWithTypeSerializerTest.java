@@ -50,7 +50,9 @@ public class ModelWithTypeSerializerTest extends SerializerTestBase<ModelWithTyp
         String location = file.getPath();
         // Create model from location
         Model tfbundled = DataConverter.restore(Modeldescriptor.ModelDescriptor.ModelType.TENSORFLOWSAVED.getNumber(), location.getBytes());
-        return new ModelWithType[]{new ModelWithType(false, dataType, Optional.of(pmml)),
+        return new ModelWithType[]{
+                new ModelWithType(false, dataType, Optional.of(pmml)),
+                new ModelWithType(false, dataType, Optional.empty()),
                 new ModelWithType(false, dataType, Optional.of(tfoptimized)),
                 new ModelWithType(false, dataType, Optional.of(tfbundled))};
     }

@@ -77,6 +77,21 @@ class ModelToServeTest {
   }
 
   @Test
+  def testPMMLBadData(): Unit = {
+    val model = Array[Byte]()
+    // Build input record
+    val record = getbinaryContent(Some(model), Option.empty, ModelDescriptor.ModelType.PMML)
+    // Convert input record
+    val result = ModelToServe.fromByteArray(record).toOption
+    // validate it
+    validateModelToServe(result, Some(model), Option.empty, ModelDescriptor.ModelType.PMML)
+    // Build PMML model
+    val pmml = ModelToServe.toModel(result.get)
+    // Validate
+    assertTrue("PMML Model is not created", pmml.isEmpty)
+  }
+
+  @Test
   def testTFOptimized(): Unit = {
     val model = getModel(tfmodeloptimized)
     // Build input record
@@ -97,6 +112,21 @@ class ModelToServeTest {
     val direct = ModelToServe.restore(ModelDescriptor.ModelType.TENSORFLOW.value, model)
     // Validate it
     valdateTFModel(direct.get)
+  }
+
+  @Test
+  def testTFOptimizedBadData(): Unit = {
+    val model = Array[Byte]()
+    // Build input record
+    val record = getbinaryContent(Some(model), Option.empty, ModelDescriptor.ModelType.TENSORFLOW)
+    // Convert input record
+    val result = ModelToServe.fromByteArray(record).toOption
+    // validate it
+    validateModelToServe(result, Some(model), Option.empty, ModelDescriptor.ModelType.TENSORFLOW)
+    // Build TF model
+    val tf = ModelToServe.toModel(result.get)
+    // Validate
+    assertTrue("TF Model is not created", tf.isEmpty)
   }
 
   @Test
@@ -131,7 +161,22 @@ class ModelToServeTest {
 
   }
 
-    private def valdatePMMLModel(pmml: Model): Unit = {
+  @Test
+  def testTFBundledBadData(): Unit = {
+    val model = new String()
+    // Build input record
+    val record = getbinaryContent(Option.empty, Some(model), ModelDescriptor.ModelType.TENSORFLOWSAVED)
+    // Convert input record
+    val result = ModelToServe.fromByteArray(record).toOption
+    // validate it
+    validateModelToServe(result, Option.empty, Some(model), ModelDescriptor.ModelType.TENSORFLOWSAVED)
+    // Build TF model
+    val tf = ModelToServe.toModel(result.get)
+    // Validate
+    assertTrue("TF Model is not created",tf.isEmpty)
+  }
+
+  private def valdatePMMLModel(pmml: Model): Unit = {
     assertTrue(pmml.isInstanceOf[SimplePMMLModel])
     val pmmlModel = pmml.asInstanceOf[SimplePMMLModel]
     assertNotEquals("PMML build",null, pmmlModel.getPmml)

@@ -38,18 +38,14 @@ class ModelTypeSerializer extends TypeSerializer[Option[Model]] {
   override def duplicate(): TypeSerializer[Option[Model]] = new ModelTypeSerializer
 
   override def serialize(record: Option[Model], target: DataOutputView): Unit = {
-    if(record == null)
-      target.writeBoolean(false)
-    else {
-      record match {
-        case Some(model) =>
-          target.writeBoolean(true)
-          val content = model.toBytes()
-          target.writeLong(model.getType)
-          target.writeLong(content.length)
-          target.write(content)
-        case _ => target.writeBoolean(false)
-      }
+    record match {
+      case Some(model) =>
+        target.writeBoolean(true)
+        val content = model.toBytes()
+        target.writeLong(model.getType)
+        target.writeLong(content.length)
+        target.write(content)
+      case _ => target.writeBoolean(false)
     }
   }
 
@@ -89,7 +85,7 @@ class ModelTypeSerializer extends TypeSerializer[Option[Model]] {
         val content = new Array[Byte] (size)
         source.read (content)
         ModelToServe.restore(t, content)
-      case _ => null
+      case _ => Option.empty
     }
 
   override def deserialize(reuse: Option[Model], source: DataInputView): Option[Model] = deserialize(source)

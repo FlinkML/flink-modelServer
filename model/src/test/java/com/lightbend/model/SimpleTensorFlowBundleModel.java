@@ -10,7 +10,7 @@ import java.util.Map;
 // Tensorflow bundle implementation for testing
 public class SimpleTensorFlowBundleModel extends TensorFlowBundleModel {
 
-    public SimpleTensorFlowBundleModel(byte[] inputStream)  {
+    public SimpleTensorFlowBundleModel(byte[] inputStream) throws Throwable {
         super(inputStream);
     }
 
